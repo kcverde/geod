@@ -67,4 +67,5 @@ src/
   styles.css    all styling
 ```
 
-See [CLAUDE.md](CLAUDE.md) for a fuller architecture overview aimed at contributors.
+See [CLAUDE.md](CLAUDE.md) for a fuller architecture overview aimed at contributors, and
+[ROADMAP.md](ROADMAP.md) for project status and planned next steps.
