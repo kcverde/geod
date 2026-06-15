@@ -4,15 +4,15 @@
    tuned values survive a reload while balancing. Dev-only — never wired in prod. */
 
 export const TUNING_DEFAULTS = {
-  enemyHp: 1,        // enemy HP (and shield) multiplier
-  enemySpeed: 1,     // enemy move-speed multiplier
-  enemyCount: 1,     // per-wave spawn-count multiplier
-  towerDmg: 1,       // all tower damage multiplier
-  towerRate: 1,      // tower fire-rate multiplier
+  enemyHp: 1.65,     // enemy HP (and shield) multiplier
+  enemySpeed: 1.1,   // enemy move-speed multiplier
+  enemyCount: 0.75,  // per-wave spawn-count multiplier
+  towerDmg: 0.7,     // all tower damage multiplier
+  towerRate: 0.85,   // tower fire-rate multiplier
   towerRange: 1,     // tower range multiplier
   economy: 1,        // credit income + starting credits multiplier
-  gameSpeed: 1,      // extra game-speed multiplier (on top of the 1×/2× button)
-  coreInvincible: false, // leaks deal no core damage when true
+  gameSpeed: 1.1,    // extra game-speed multiplier (on top of the 1×/2× button)
+  coreInvincible: false, // leaks deal no core damage when true (debug only — not a balance value)
 };
 
 const KEY = 'neonGridDefense.tuning';
