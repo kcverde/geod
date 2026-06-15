@@ -3,7 +3,7 @@ import { $, clamp, rand, TAU } from './util.js';
 import { meta, saveMeta } from './save.js';
 import { audioInit, setMute, sfx, buzz } from './audio.js';
 import { GW, GH, WP, pathCells, BASE, segLen, totalLen, posAt, dirAt } from './path.js';
-import { TOWERS, ENEMIES, SHOP } from './config.js';
+import { TOWERS, ENEMIES, SHOP, SPAWN_COUNT_SCALE, GAME_SPEED } from './config.js';
 import { tuning } from './tuning.js';
 
 (()=>{
@@ -93,7 +93,7 @@ const salvMul=()=>1+meta.up.salvage*.05;
 /* ============ WAVES ============ */
 function waveSpawns(n){
   const s=[];let t=0;
-  const add=(type,count,gap)=>{count=Math.max(1,Math.round(count*tuning.enemyCount));for(let i=0;i<count;i++){s.push({t,type});t+=gap;}t+=1;};
+  const add=(type,count,gap)=>{count=Math.max(1,Math.round(count*SPAWN_COUNT_SCALE*tuning.enemyCount));for(let i=0;i<count;i++){s.push({t,type});t+=gap;}t+=1;};
   if(n%8===0){
     sfx('boss');banner('⚠ BOSS INBOUND ⚠','#ff2255');buzz(80);
     add('boss',Math.max(1,Math.floor(n/24)+1),3.5);
@@ -801,7 +801,7 @@ function loop(now){
   requestAnimationFrame(loop);
   let dt=Math.min(.034,(now-last)/1000);last=now;
   if(state==='play'&&!paused){
-    update(dt*speed*tuning.gameSpeed);
+    update(dt*speed*GAME_SPEED*tuning.gameSpeed);
     hudTick+=dt;if(hudTick>.25){hudTick=0;if(G.waveActive)updateWaveBtn();}
   }
   render();

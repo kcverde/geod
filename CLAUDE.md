@@ -25,7 +25,7 @@ npm test         # run unit tests (Vitest)
 | File | Responsibility |
 | ---- | -------------- |
 | `main.js` | Bootstrap, game state (`state`, `G`), update tick, render, HUD/UI wiring, game loop. Imports from all the modules below. Still the largest file — the tightly-coupled core lives here. |
-| `config.js` | Data tables: `TOWERS` (5 types × 3 tiers + `up` costs), `ENEMIES` (6 types), `SHOP` (lab upgrades). **Primary balance knobs.** |
+| `config.js` | Data tables: `TOWERS` (5 types × 3 tiers + `up` costs), `ENEMIES` (6 types), `SHOP` (lab upgrades), plus global scalars `SPAWN_COUNT_SCALE` / `GAME_SPEED`. **Primary balance knobs** — the real balance lives here; the dev overlay ships neutral (1×). |
 | `path.js` | `GW`×`GH` grid (9×14), waypoints `WP`, `pathCells` (non-buildable tiles), and `posAt(t)`/`dirAt(t)` arc-length interpolation along the lane. |
 | `save.js` | `meta` object + `localStorage` persistence (key `neonGridDefense.v1`): cores, best scores, `meta.up` upgrades, `meta.unlocked` turrets. |
 | `audio.js` | WebAudio synthesized SFX — no audio files. `sfx(name)` dispatches by name; `audioInit()` lazily creates the context on first interaction. |

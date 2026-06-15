@@ -2,11 +2,9 @@ import { describe, it, expect } from 'vitest';
 import { TUNING_DEFAULTS } from '../src/tuning.js';
 
 describe('tuning defaults', () => {
-  it('all multipliers are positive finite numbers', () => {
+  it('all multipliers are neutral (1×) — real balance lives in config.js', () => {
     for (const k of ['enemyHp', 'enemySpeed', 'enemyCount', 'towerDmg', 'towerRate', 'towerRange', 'economy', 'gameSpeed']) {
-      expect(typeof TUNING_DEFAULTS[k], k).toBe('number');
-      expect(Number.isFinite(TUNING_DEFAULTS[k]), k).toBe(true);
-      expect(TUNING_DEFAULTS[k], k).toBeGreaterThan(0);
+      expect(TUNING_DEFAULTS[k], k).toBe(1);
     }
   });
 
