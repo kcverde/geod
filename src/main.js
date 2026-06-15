@@ -1,104 +1,12 @@
 import './styles.css';
+import { $, clamp, rand, TAU } from './util.js';
+import { meta, saveMeta } from './save.js';
+import { audioInit, setMute, sfx, buzz } from './audio.js';
+import { GW, GH, WP, pathCells, BASE, segLen, totalLen, posAt, dirAt } from './path.js';
+import { TOWERS, ENEMIES, SHOP } from './config.js';
 
 (()=>{
 'use strict';
-const $=id=>document.getElementById(id);
-const clamp=(v,a,b)=>v<a?a:v>b?b:v;
-const rand=(a,b)=>a+Math.random()*(b-a);
-const TAU=Math.PI*2;
-
-/* ============ META / SAVE ============ */
-const SAVE_KEY='neonGridDefense.v1';
-let meta={cores:0,bestWave:0,bestScore:0,mute:false,seenTut:false,
-  up:{hp:0,credits:0,dmg:0,salvage:0},unlocked:{lance:false,arc:false}};
-try{const s=localStorage.getItem(SAVE_KEY);if(s)meta=Object.assign(meta,JSON.parse(s));}catch(e){}
-function saveMeta(){try{localStorage.setItem(SAVE_KEY,JSON.stringify(meta));}catch(e){}}
-
-/* ============ AUDIO ============ */
-let AC=null,masterGain=null,lastSfx={};
-function audioInit(){if(AC)return;try{AC=new (window.AudioContext||window.webkitAudioContext)();
-  masterGain=AC.createGain();masterGain.gain.value=meta.mute?0:0.5;masterGain.connect(AC.destination);}catch(e){}}
-function setMute(m){meta.mute=m;saveMeta();if(masterGain)masterGain.gain.value=m?0:0.5;}
-function tone(f0,f1,dur,type,vol,when){if(!AC)return;const t=AC.currentTime+(when||0);
-  const o=AC.createOscillator(),g=AC.createGain();o.type=type;o.frequency.setValueAtTime(f0,t);
-  o.frequency.exponentialRampToValueAtTime(Math.max(f1,1),t+dur);
-  g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(.0001,t+dur);
-  o.connect(g);g.connect(masterGain);o.start(t);o.stop(t+dur+.02);}
-function noise(dur,vol,fc){if(!AC)return;const n=AC.sampleRate*dur|0,b=AC.createBuffer(1,n,AC.sampleRate),d=b.getChannelData(0);
-  for(let i=0;i<n;i++)d[i]=(Math.random()*2-1)*(1-i/n);
-  const s=AC.createBufferSource();s.buffer=b;const f=AC.createBiquadFilter();f.type='lowpass';f.frequency.value=fc;
-  const g=AC.createGain();g.gain.value=vol;s.connect(f);f.connect(g);g.connect(masterGain);s.start();}
-function sfx(name){if(!AC||meta.mute)return;const now=performance.now();
-  if(lastSfx[name]&&now-lastSfx[name]<50)return;lastSfx[name]=now;
-  switch(name){
-    case 'shoot':tone(880,220,.07,'square',.05);break;
-    case 'nova':tone(160,40,.2,'sawtooth',.1);noise(.18,.12,900);break;
-    case 'arc':tone(1400,300,.1,'sawtooth',.06);break;
-    case 'lance':tone(2200,180,.16,'sawtooth',.08);break;
-    case 'cryo':tone(520,900,.14,'sine',.07);break;
-    case 'kill':tone(660,1320,.09,'square',.06);break;
-    case 'boom':noise(.3,.2,600);tone(120,30,.3,'sine',.18);break;
-    case 'build':tone(330,660,.12,'square',.09);tone(495,990,.12,'square',.06,.05);break;
-    case 'upgrade':tone(440,880,.1,'square',.08);tone(660,1320,.1,'square',.08,.07);tone(880,1760,.12,'square',.08,.14);break;
-    case 'sell':tone(700,200,.18,'square',.08);break;
-    case 'leak':tone(180,60,.4,'sawtooth',.2);noise(.25,.15,400);break;
-    case 'wave':tone(220,880,.35,'sawtooth',.08);break;
-    case 'boss':tone(110,110,.5,'sawtooth',.16);tone(116,116,.5,'sawtooth',.16);break;
-    case 'click':tone(700,500,.05,'square',.05);break;
-    case 'deny':tone(200,150,.12,'square',.08);break;
-    case 'over':[523,392,311,233,165].forEach((f,i)=>tone(f,f*.5,.3,'sawtooth',.1,i*.16));break;
-    case 'cash':tone(987,1976,.08,'square',.05);break;
-  }}
-function buzz(ms){if(navigator.vibrate)try{navigator.vibrate(ms);}catch(e){}}
-
-/* ============ GRID & PATH ============ */
-const GW=9,GH=14;
-const WP=[[-0.7,1.5],[7.5,1.5],[7.5,4.5],[1.5,4.5],[1.5,7.5],[7.5,7.5],[7.5,10.5],[1.5,10.5],[1.5,12.5],[8.5,12.5]];
-const PATH_INT=[[0,1],[7,1],[7,4],[1,4],[1,7],[7,7],[7,10],[1,10],[1,12],[8,12]];
-const pathCells=new Set();
-for(let i=0;i<PATH_INT.length-1;i++){let[x0,y0]=PATH_INT[i],[x1,y1]=PATH_INT[i+1];
-  const dx=Math.sign(x1-x0),dy=Math.sign(y1-y0);let x=x0,y=y0;pathCells.add(x+','+y);
-  while(x!==x1||y!==y1){x+=dx;y+=dy;pathCells.add(x+','+y);}}
-const BASE=[8,12];
-const segLen=[];let totalLen=0;
-for(let i=0;i<WP.length-1;i++){const l=Math.hypot(WP[i+1][0]-WP[i][0],WP[i+1][1]-WP[i][1]);segLen.push(l);totalLen+=l;}
-function posAt(t){t=clamp(t,0,totalLen);let acc=0;
-  for(let i=0;i<segLen.length;i++){if(t<=acc+segLen[i]){const k=(t-acc)/segLen[i];
-    return[WP[i][0]+(WP[i+1][0]-WP[i][0])*k,WP[i][1]+(WP[i+1][1]-WP[i][1])*k];}acc+=segLen[i];}
-  return[WP[WP.length-1][0],WP[WP.length-1][1]];}
-function dirAt(t){t=clamp(t,0,totalLen-.001);let acc=0;
-  for(let i=0;i<segLen.length;i++){if(t<=acc+segLen[i]){const dx=WP[i+1][0]-WP[i][0],dy=WP[i+1][1]-WP[i][1];
-    const l=segLen[i];return[dx/l,dy/l];}acc+=segLen[i];}return[1,0];}
-
-/* ============ DEFINITIONS ============ */
-const TOWERS={
-  pulse:{name:'PULSE',icon:'▲',color:'#22d8ff',cost:50,desc:'rapid fire',
-    tiers:[{dmg:7,rate:3.2,range:2.3},{dmg:13,rate:3.8,range:2.5},{dmg:24,rate:4.6,range:2.8}],up:[45,95]},
-  nova:{name:'NOVA',icon:'◆',color:'#ffb020',cost:90,desc:'splash mortar',
-    tiers:[{dmg:22,rate:.75,range:3,aoe:1.15},{dmg:40,rate:.85,range:3.2,aoe:1.3},{dmg:70,rate:1,range:3.5,aoe:1.5}],up:[80,170]},
-  cryo:{name:'CRYO',icon:'✱',color:'#9be8ff',cost:70,desc:'slows + chips',
-    tiers:[{dmg:4,rate:1.1,range:2.2,slow:.42,slowT:1.4},{dmg:8,rate:1.25,range:2.4,slow:.5,slowT:1.7},{dmg:14,rate:1.45,range:2.7,slow:.58,slowT:2}],up:[60,130]},
-  lance:{name:'LANCE',icon:'◈',color:'#ff2e88',cost:120,desc:'piercing rail',lock:60,
-    tiers:[{dmg:60,rate:.55,range:4.6},{dmg:110,rate:.62,range:5},{dmg:200,rate:.72,range:5.5}],up:[110,230]},
-  arc:{name:'ARC',icon:'ϟ',color:'#54ff7c',cost:110,desc:'chain lightning',lock:130,
-    tiers:[{dmg:13,rate:1.3,range:2.7,chains:4},{dmg:22,rate:1.5,range:2.9,chains:5},{dmg:38,rate:1.7,range:3.2,chains:7}],up:[100,210]},
-};
-const ENEMIES={
-  drone:{hp:26,spd:1,bounty:6,score:50,r:.26,color:'#ff6bd6'},
-  dart:{hp:15,spd:1.85,bounty:5,score:60,r:.2,color:'#ffe93c'},
-  swarm:{hp:9,spd:1.35,bounty:2,score:25,r:.14,color:'#7dff9a'},
-  tank:{hp:150,spd:.5,bounty:18,score:150,r:.34,color:'#ff4040'},
-  shield:{hp:70,shield:70,spd:.8,bounty:16,score:140,r:.28,color:'#b06bff'},
-  boss:{hp:950,spd:.38,bounty:130,score:1500,r:.55,color:'#ff2255',dmg:3},
-};
-const SHOP=[
-  {id:'hp',name:'REACTOR PLATING',desc:'+2 core integrity per level',base:20,max:6},
-  {id:'credits',name:'SEED FUNDING',desc:'+30 starting credits per level',base:15,max:6},
-  {id:'dmg',name:'OVERCLOCK',desc:'+4% turret damage per level',base:25,max:8},
-  {id:'salvage',name:'SALVAGE RIG',desc:'+5% credit income per level',base:20,max:6},
-  {id:'lance',name:'UNLOCK: LANCE',desc:'piercing railgun turret',base:60,unlock:true},
-  {id:'arc',name:'UNLOCK: ARC',desc:'chain lightning turret',base:130,unlock:true},
-];
 
 /* ============ LAYOUT ============ */
 const cv=$('cv'),ctx=cv.getContext('2d');

@@ -4,22 +4,23 @@ A neon, synthwave-styled **tower defense** game built as a single, self-containe
 
 Designed mobile-first (touch input, safe-area insets, responsive canvas) but plays fine with a mouse in any modern browser.
 
-## Play
+## Play / develop
 
-There is no build step and no dependencies. Just open the file:
-
-```sh
-open index.html        # macOS
-```
-
-Or serve it locally (recommended so the Google Fonts / audio behave consistently):
+Built with [Vite](https://vitejs.dev/). With Node installed:
 
 ```sh
-python3 -m http.server 8000
-# then visit http://localhost:8000
+npm install      # first time only
+npm run dev      # dev server with hot-reload → http://localhost:5173
 ```
 
-The only external resource is the **Orbitron** web font from Google Fonts; the game works offline if that fails to load (it falls back to system fonts).
+For a production build:
+
+```sh
+npm run build    # outputs static files to dist/
+npm run preview  # serve the built version locally
+```
+
+The only external resource is the **Orbitron** web font from Google Fonts; the game falls back to system fonts if that fails to load.
 
 ## How to play
 
@@ -54,4 +55,16 @@ Progress (Cores, best wave, best score, upgrade levels, unlocks, mute, tutorial-
 
 ## Project layout
 
-The entire game — markup, CSS, and JavaScript — lives in [index.html](index.html). See [CLAUDE.md](CLAUDE.md) for an architecture overview aimed at contributors.
+```
+index.html      thin shell (canvas + UI overlays)
+src/
+  main.js       bootstrap, game loop, update/render, UI wiring
+  config.js     towers / enemies / shop data (balance knobs)
+  path.js       grid + enemy-path math
+  save.js       localStorage persistence
+  audio.js      synthesized WebAudio SFX
+  util.js       small shared helpers
+  styles.css    all styling
+```
+
+See [CLAUDE.md](CLAUDE.md) for a fuller architecture overview aimed at contributors.
