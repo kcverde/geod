@@ -30,6 +30,8 @@ npm test         # run unit tests (Vitest)
 | `save.js` | `meta` object + `localStorage` persistence (key `neonGridDefense.v1`): cores, best scores, `meta.up` upgrades, `meta.unlocked` turrets. |
 | `audio.js` | WebAudio synthesized SFX — no audio files. `sfx(name)` dispatches by name; `audioInit()` lazily creates the context on first interaction. |
 | `util.js` | Shared helpers: `$` (getElementById), `clamp`, `rand`, `TAU`. |
+| `tuning.js` | Dev balance multipliers (`tuning` object) + localStorage persistence. Read at the game's balance chokepoints. |
+| `admin.js` | Dev-only tuning overlay (sliders + debug actions). Loaded dynamically; see below. |
 
 `src/main.js` is still one IIFE internally, organized into commented sections — the seams for further extraction are visible:
 
@@ -45,6 +47,20 @@ npm test         # run unit tests (Vitest)
 - **LOOP** — `requestAnimationFrame`: `update(dt*speed)` then `render()` each frame. `dt` clamped to 0.034s.
 
 > **Next extraction step (not yet done):** the LAYOUT/STATE/WAVES/COMBAT/FX/RENDER/UI sections still share mutable state (`G`, geometry, `ctx`). Splitting them into their own modules means routing that shared state through a small `state.js` rather than relying on closure. Do this deliberately, one section at a time, verifying the game runs after each.
+
+## Admin overlay (dev only)
+
+`npm run dev` only: press **`` ` ``** (backtick) to toggle a balance panel. Live sliders
+drive global multipliers in `tuning.js` (enemy hp/speed/count, tower dmg/rate/range,
+economy, game speed) that the game reads at its balance chokepoints; debug actions cover
+jump-to-wave, +credits, kill-all, and an invincible-core toggle. **Copy** puts the current
+`tuning` JSON on the clipboard so good values can be baked into `config.js`. Values persist
+to `localStorage` (`neonGridDefense.tuning`).
+
+It is gated by `if (import.meta.env.DEV)` with a **dynamic** `import('./admin.js')`, so Vite
+strips `admin.js` entirely from production builds — players never load it. To add a knob:
+add a default to `tuning.js`, apply it at the relevant chokepoint in `main.js`, and add a
+row to `SLIDERS` in `admin.js`.
 
 ## Conventions
 

@@ -4,6 +4,7 @@ import { meta, saveMeta } from './save.js';
 import { audioInit, setMute, sfx, buzz } from './audio.js';
 import { GW, GH, WP, pathCells, BASE, segLen, totalLen, posAt, dirAt } from './path.js';
 import { TOWERS, ENEMIES, SHOP } from './config.js';
+import { tuning } from './tuning.js';
 
 (()=>{
 'use strict';
@@ -81,18 +82,18 @@ let state='menu'; // menu | play | over
 let paused=false,speed=1;
 let G=null;
 function newGame(){
-  G={health:10+meta.up.hp*2,credits:200+meta.up.credits*30,score:0,mult:1,streak:0,
+  G={health:10+meta.up.hp*2,credits:Math.round((200+meta.up.credits*30)*tuning.economy),score:0,mult:1,streak:0,
     wave:0,enemies:[],towers:new Map(),projs:[],fx:[],parts:[],texts:[],
     spawnQ:[],waveT:0,waveActive:false,countdown:5,kills:0,
     sel:null,selTower:null,time:0,shake:0,flash:0};
 }
-const dmgMul=()=>1+meta.up.dmg*.04;
+const dmgMul=()=>(1+meta.up.dmg*.04)*tuning.towerDmg;
 const salvMul=()=>1+meta.up.salvage*.05;
 
 /* ============ WAVES ============ */
 function waveSpawns(n){
   const s=[];let t=0;
-  const add=(type,count,gap)=>{for(let i=0;i<count;i++){s.push({t,type});t+=gap;}t+=1;};
+  const add=(type,count,gap)=>{count=Math.max(1,Math.round(count*tuning.enemyCount));for(let i=0;i<count;i++){s.push({t,type});t+=gap;}t+=1;};
   if(n%8===0){
     sfx('boss');banner('⚠ BOSS INBOUND ⚠','#ff2255');buzz(80);
     add('boss',Math.max(1,Math.floor(n/24)+1),3.5);
@@ -116,9 +117,9 @@ function startWave(){
   updateHUD();updateWaveBtn();
 }
 function spawnEnemy(type){
-  const d=ENEMIES[type],m=hpMul(G.wave);
+  const d=ENEMIES[type],m=hpMul(G.wave)*tuning.enemyHp;
   const hp=d.hp*m*(type==='boss'?(1+G.wave*.06):1);
-  G.enemies.push({type,t:0,hp,maxHp:hp,spd:d.spd*(1+Math.min(.5,G.wave*.008)),
+  G.enemies.push({type,t:0,hp,maxHp:hp,spd:d.spd*(1+Math.min(.5,G.wave*.008))*tuning.enemySpeed,
     r:d.r,color:d.color,slowUntil:0,slowMult:1,tr:[],
     shield:d.shield?d.shield*m:0,shieldMax:d.shield?d.shield*m:0,lastHit:-9,
     wob:Math.random()*TAU,dead:false});
@@ -144,7 +145,7 @@ function hurt(e,dmg,color){
 }
 function kill(e,color){
   const d=ENEMIES[e.type];
-  const credits=Math.round(d.bounty*salvMul());
+  const credits=Math.round(d.bounty*salvMul()*tuning.economy);
   G.credits+=credits;G.kills++;
   G.streak++;G.mult=Math.min(8,1+G.streak*.1);
   G.score+=Math.round(d.score*G.mult);
@@ -161,7 +162,8 @@ function kill(e,color){
 }
 function leak(e){
   const d=ENEMIES[e.type];
-  G.health-=d.dmg||1;G.streak=0;G.mult=1;G.shake=10;G.flash=.6;
+  if(!tuning.coreInvincible)G.health-=d.dmg||1;
+  G.streak=0;G.mult=1;G.shake=10;G.flash=.6;
   sfx('leak');buzz(100);
   const[x,y]=posAt(totalLen-.1);burst(x,y,'#ff2255',24,1.6);
   meshImpulse(x,y,260);
@@ -171,17 +173,18 @@ function leak(e){
 }
 function fireTower(tw,dt){
   const def=TOWERS[tw.type],st=def.tiers[tw.tier];
+  const range=st.range*tuning.towerRange,rate=st.rate*tuning.towerRate;
   tw.cd-=dt;if(tw.cd>0)return;
   const x=tw.c+.5,y=tw.r+.5;
   if(tw.type==='cryo'){
-    const list=nearestEnemies(x,y,st.range);if(!list.length)return;
-    tw.cd=1/st.rate;sfx('cryo');
-    G.fx.push({k:'ring',x,y,r0:.2,r1:st.range,ttl:.45,max:.45,color:def.color});
+    const list=nearestEnemies(x,y,range);if(!list.length)return;
+    tw.cd=1/rate;sfx('cryo');
+    G.fx.push({k:'ring',x,y,r0:.2,r1:range,ttl:.45,max:.45,color:def.color});
     for(const c of list){c.e.slowUntil=G.time+st.slowT;c.e.slowMult=1-st.slow;hurt(c.e,st.dmg*dmgMul(),def.color);}
     return;}
-  const list=nearestEnemies(x,y,st.range);
+  const list=nearestEnemies(x,y,range);
   const tgt=pickTarget(list,tw.prio);if(!tgt)return;
-  tw.cd=1/st.rate;tw.aim=Math.atan2(tgt.ey-y,tgt.ex-x);
+  tw.cd=1/rate;tw.aim=Math.atan2(tgt.ey-y,tgt.ex-x);
   if(tw.type==='pulse'){
     sfx('shoot');
     G.projs.push({k:'bolt',x,y,tgt:tgt.e,spd:10,dmg:st.dmg*dmgMul(),color:def.color,
@@ -196,11 +199,11 @@ function fireTower(tw,dt){
   }else if(tw.type==='lance'){
     sfx('lance');
     const dx=Math.cos(tw.aim),dy=Math.sin(tw.aim);
-    const ex=x+dx*st.range,ey=y+dy*st.range;
+    const ex=x+dx*range,ey=y+dy*range;
     G.fx.push({k:'beam',x1:x,y1:y,x2:ex,y2:ey,ttl:.18,max:.18,color:def.color});
-    for(const c of nearestEnemies(x,y,st.range+1)){
+    for(const c of nearestEnemies(x,y,range+1)){
       const px=c.ex-x,py=c.ey-y;const proj=px*dx+py*dy;
-      if(proj<0||proj>st.range)continue;
+      if(proj<0||proj>range)continue;
       const perp=Math.abs(px*dy-py*dx);
       if(perp<.38+c.e.r)hurt(c.e,st.dmg*dmgMul(),def.color);}
     G.shake=Math.max(G.shake,2);
@@ -293,7 +296,7 @@ function update(dt){
   // wave end
   if(G.waveActive&&!G.spawnQ.length&&!G.enemies.length){
     G.waveActive=false;
-    const bonus=Math.round((25+G.wave*6)*salvMul());
+    const bonus=Math.round((25+G.wave*6)*salvMul()*tuning.economy);
     G.credits+=bonus;G.score+=200+G.wave*50;
     sfx('cash');toast('WAVE CLEAR  +'+bonus+' ◈');
     G.countdown=10;updateHUD();updateWaveBtn();}
@@ -798,7 +801,7 @@ function loop(now){
   requestAnimationFrame(loop);
   let dt=Math.min(.034,(now-last)/1000);last=now;
   if(state==='play'&&!paused){
-    update(dt*speed);
+    update(dt*speed*tuning.gameSpeed);
     hudTick+=dt;if(hudTick>.25){hudTick=0;if(G.waveActive)updateWaveBtn();}
   }
   render();
@@ -808,4 +811,16 @@ document.addEventListener('gesturestart',e=>e.preventDefault());
 resize();
 toMenu();
 requestAnimationFrame(loop);
+
+/* ---------- dev-only admin overlay (stripped from production builds) ---------- */
+if(import.meta.env.DEV){
+  import('./admin.js').then(m=>m.initAdmin({
+    getG:()=>G,
+    jumpToWave:n=>{if(!G)return;G.enemies.length=0;G.spawnQ.length=0;G.waveActive=false;
+      G.wave=Math.max(0,n-1);startWave();},
+    addCredits:n=>{if(!G)return;G.credits+=n;updateHUD();},
+    killAll:()=>{if(G)G.enemies.length=0;},
+    updateHUD,
+  }));
+}
 })();

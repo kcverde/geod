@@ -94,3 +94,28 @@
     font-size:26px;font-weight:800;letter-spacing:6px;opacity:0;transition:opacity .3s}
   #toast{position:fixed;bottom:130px;left:0;right:0;text-align:center;z-index:15;pointer-events:none;
     font-size:13px;letter-spacing:1px;color:#cfe9ff;opacity:0;transition:opacity .3s;text-shadow:0 0 8px rgba(34,216,255,.8)}
+
+  /* ---------- dev admin overlay (dev builds only) ---------- */
+  #admin{position:fixed;top:8px;left:8px;z-index:50;width:260px;max-height:90vh;overflow-y:auto;
+    font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11px;color:#bfe6ff;
+    background:rgba(6,10,18,.93);border:1px solid rgba(120,160,200,.4);border-radius:8px;
+    padding:8px 10px;box-shadow:0 6px 24px rgba(0,0,0,.5);backdrop-filter:blur(3px);user-select:none}
+  #admin[hidden]{display:none}
+  #admin .admin-title{font-weight:700;letter-spacing:1px;color:#fff;margin-bottom:8px;
+    display:flex;justify-content:space-between;align-items:baseline}
+  #admin .admin-hint{font-size:9px;color:#7a92a8;font-weight:400}
+  #admin .admin-row{display:flex;align-items:center;gap:6px;margin:3px 0}
+  #admin .admin-row label{flex:0 0 84px;color:#9fb6cc}
+  #admin .admin-row input[type=range]{flex:1;min-width:0;accent-color:#22d8ff}
+  #admin .admin-val{flex:0 0 40px;text-align:right;color:#ffe93c}
+  #admin .admin-num{flex:1;min-width:0;background:#0a1422;color:#bfe6ff;
+    border:1px solid rgba(120,160,200,.4);border-radius:4px;padding:2px 4px;font:inherit}
+  #admin button{background:#0d1a2c;color:#bfe6ff;border:1px solid rgba(120,160,200,.45);
+    border-radius:5px;padding:5px 7px;font:inherit;cursor:pointer}
+  #admin button:hover{background:#15263d}
+  #admin button:active{background:#1d3450}
+  #admin .admin-toggle{margin:6px 0}
+  #admin .admin-toggle button{flex:1;width:100%}
+  #admin .admin-toggle button.on{border-color:var(--green);color:var(--green)}
+  #admin .admin-actions{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
+  #admin .admin-actions button{flex:1 1 calc(50% - 5px)}
