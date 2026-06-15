@@ -18,6 +18,25 @@ const SLIDERS = [
   ['Game speed',    'gameSpeed',   0.25, 4,   0.05],
 ];
 
+// Copy text to clipboard. Tries the async Clipboard API, then falls back to a
+// hidden textarea + execCommand (works when the Clipboard API is blocked, e.g.
+// NotAllowedError). Returns whether the copy succeeded.
+async function copyText(text) {
+  if (navigator.clipboard?.writeText) {
+    try { await navigator.clipboard.writeText(text); return true; } catch (e) {}
+  }
+  try {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.cssText = 'position:fixed;top:0;left:0;opacity:0';
+    document.body.appendChild(ta);
+    ta.focus(); ta.select();
+    const ok = document.execCommand('copy');
+    document.body.removeChild(ta);
+    return ok;
+  } catch (e) { return false; }
+}
+
 export function initAdmin(api) {
   const root = document.createElement('div');
   root.id = 'admin';
@@ -84,12 +103,12 @@ export function initAdmin(api) {
   actions.appendChild(mkBtn('+1000 ◈', () => api.addCredits(1000)));
   actions.appendChild(mkBtn('KILL ALL', () => api.killAll()));
   actions.appendChild(mkBtn('RESET', () => { resetTuning(); refreshers.forEach((f) => f()); }));
-  actions.appendChild(mkBtn('COPY', (e) => {
+  actions.appendChild(mkBtn('COPY', async (e) => {
     const json = JSON.stringify(tuning, null, 2);
-    navigator.clipboard?.writeText(json).then(
-      () => { e.target.textContent = 'COPIED'; setTimeout(() => (e.target.textContent = 'COPY'), 1000); },
-      () => {}
-    );
+    const ok = await copyText(json);
+    e.target.textContent = ok ? 'COPIED' : 'COPY FAILED';
+    setTimeout(() => (e.target.textContent = 'COPY'), 1200);
+    if (!ok) window.prompt('Copy the tuning JSON manually:', json);
   }));
   root.appendChild(actions);
 
