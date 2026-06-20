@@ -735,6 +735,7 @@ function startRun(){
   banner('DEFEND THE REACTOR','#22d8ff');
 }
 function gameOver(){
+  if(state==='over'||!G)return;
   state='over';closeSheets();
   const earned=G.wave*2+Math.floor(G.score/4000);
   meta.cores+=earned;
@@ -756,6 +757,7 @@ function toMenu(){
   $('mBestWave').textContent=meta.bestWave||'—';
   $('mBestScore').textContent=meta.bestScore?meta.bestScore.toLocaleString():'—';
   $('mCores').textContent=meta.cores;
+  muteLabel();
   show('menu');
 }
 $('startBtn').addEventListener('click',()=>{audioInit();sfx('click');
