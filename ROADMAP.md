@@ -3,6 +3,10 @@
 Where the project stands and what's planned next. (For architecture details see
 [CLAUDE.md](CLAUDE.md); for how to play see [README.md](README.md).)
 
+> **Task-level detail lives in [BACKLOG.md](BACKLOG.md)** — the full execution backlog
+> (architecture extraction, playability, graphics, levels, Google Play deployment),
+> broken into single-session tasks with steps and done-when criteria.
+
 ## Done
 
 - **Tooling & structure** — migrated from a single one-shot `index.html` to a Vite
