@@ -199,6 +199,63 @@ Mock `sfx`/`buzz` via `vi.mock('../src/audio.js', ...)` so tests run headless (n
 AudioContext / DOM canvas needed — if fx.js touches DOM ids in `kill`, also mock fx).
 **Done when:** `npm test` green including the new file.
 
+### A11. Per-tower behavior registry — colocate fire/draw with stats
+**Size:** M · **Deps:** best right after A6 (combat.js exists); adaptable to main.js
+**Files:** new `src/towers.js`, `src/combat.js` (`fireTower`), `src/render.js`
+(`drawTower`), `CLAUDE.md`
+**Context:** adding a turret today means three synced edits: the `TOWERS` entry in
+config.js, a branch in `fireTower()`, a branch in `drawTower()` (CLAUDE.md documents
+this three-place procedure). Colocate the behavior with the type so a new turret is
+one self-contained object. config.js stays pure data (it's imported by tests that must
+run headless — do NOT put canvas/audio code there).
+**Steps:**
+1. Create `src/towers.js` exporting
+   `export const BEHAVIOR={pulse:{fire,draw},nova:{...},cryo:{selfTarget:true,fire,draw},lance:{...},arc:{...}}`.
+2. Move each `fireTower` branch body verbatim into its `fire`. Signature:
+   `fire(tw,st,ctx)` where combat.js passes
+   `ctx={tgt,list,range,hurt,nearestEnemies,dmgMul}` — **pass helpers via ctx instead
+   of importing them in towers.js**, so towers.js never imports combat.js (avoids an
+   import cycle; towers.js may import audio/fx/state/path directly — those are
+   downstream-safe). `fireTower` keeps the shared plumbing exactly as now: cooldown
+   decrement, tuned range/rate, then: if `BEHAVIOR[tw.type].selfTarget` → build
+   `list`, return if empty, set `tw.cd`, call `fire`; else → `pickTarget`, return if
+   none, set `tw.cd` + `tw.aim`, call `fire`.
+3. Move each `drawTower` type branch verbatim into `draw(tw,t,s,dual)` — render.js
+   keeps the shared halo/base-plate/tier-motes code and passes its local `dual`
+   helper; only the per-type shape block moves.
+4. Update CLAUDE.md's "Add a turret" instructions: one `TOWERS` entry (stats) + one
+   `BEHAVIOR` entry (fire/draw) + optional `SHOP` unlock row.
+5. Optional follow-up (separate commit, same pattern): move `drawEnemy`'s six shape
+   branches into an `ENEMY_DRAW` registry keyed by type.
+**Done when:** as a self-test, add a dummy 6th turret (copy pulse's stats/behavior,
+new name/color), confirm it appears in the build sheet and fires in a dev run, then
+delete it. All five real turrets fire and draw identically; tests green.
+
+### A12. HUD dirty flag — decouple simulation from DOM writes
+**Size:** S · **Deps:** best right after A4 (hud.js exists); adaptable to main.js
+**Files:** `src/state.js`, `src/combat.js`, `src/waves.js`, `src/ui.js`,
+`src/main.js` (loop), section-A DAG diagram in this file
+**Context:** `kill()`, `leak()`, `startWave()`, and the wave-end block call
+`updateHUD()`/`updateWaveBtn()` directly — simulation code that knows about DOM
+widgets, and a standing invitation for "forgot to refresh" bugs (see B2). Replace the
+calls with a flag flushed once per frame.
+**Steps:**
+1. Add `dirtyHud:false` to the `S` object in state.js (module state, not per-run `G`).
+2. Replace every `updateHUD()` / `updateWaveBtn()` call in combat.js, waves.js, and
+   the ui.js button handlers with `S.dirtyHud=true`. (Direct calls may remain only in
+   `startRun`/`toMenu`/`gameOver`, which repaint outside the loop.)
+3. In `loop()` (main.js), before `render()` and OUTSIDE the play-only branch (so
+   paused/menu states still flush): `if(S.dirtyHud){S.dirtyHud=false;updateHUD();updateWaveBtn();}`.
+4. Throttle the countdown: the countdown block currently calls `updateWaveBtn()` every
+   frame. Instead set `S.dirtyHud=true` only when `Math.ceil(G.countdown)` changes
+   (track the previous value on `G`). Delete the now-redundant `hudTick` throttle in
+   `loop()`.
+5. Update the DAG diagram at the top of section A: `waves` and `combat` no longer
+   import `hud`.
+**Done when:** kills/credits/wave changes still update the HUD within one frame;
+`grep -l "hud.js" src/combat.js src/waves.js` matches nothing; DOM writes during a
+countdown happen ~1/sec instead of ~60/sec (verify with a breakpoint or perf trace).
+
 ---
 
 # B. Playability & UX
@@ -653,7 +710,8 @@ malformed paste shows an error toast and changes nothing.
 
 1. **Quick wins first (playable value, zero risk):** B3, B8, B7, B2, C3, C4 — six
    small tasks, immediately felt.
-2. **Architecture:** A1→A7 in order, then A8–A10.
+2. **Architecture:** A1→A7 in order — slotting A12 right after A4 and A11 right
+   after A6 — then A8–A10.
 3. **UX/depth:** B1, B4, B5, B9, B6, then B10 (balance) and B11.
 4. **Graphics/perf:** C1, C2, C5, C6, C7, C8.
 5. **Levels:** D1→D3.
