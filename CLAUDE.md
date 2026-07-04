@@ -30,13 +30,13 @@ npm test         # run unit tests (Vitest)
 | `save.js` | `meta` object + `localStorage` persistence (key `neonGridDefense.v1`): cores, best scores, `meta.up` upgrades, `meta.unlocked` turrets. |
 | `audio.js` | WebAudio synthesized SFX — no audio files. `sfx(name)` dispatches by name; `audioInit()` lazily creates the context on first interaction. |
 | `util.js` | Shared helpers: `$` (getElementById), `clamp`, `rand`, `TAU`. |
+| `state.js` | Shared mutable run state: the `S` object (`S.state` 'menu' \| 'play' \| 'over', `S.paused`, `S.speed`, `S.G`), `newGame()`, and the `dmgMul`/`salvMul` multipliers. `S.G` is the per-run object; `null` when no run is active — update/render guard on this. |
 | `tuning.js` | Dev balance multipliers (`tuning` object) + localStorage persistence. Read at the game's balance chokepoints. |
 | `admin.js` | Dev-only tuning overlay (sliders + debug actions). Loaded dynamically; see below. |
 
 `src/main.js` is still one IIFE internally, organized into commented sections — the seams for further extraction are visible:
 
 - **LAYOUT** — canvas sizing/DPR (`resize`), grid→pixel helpers `cx()`/`cy()`, pre-rendered background (`buildBg`), cached glow sprites (`glow`), parallax `stars`, and the warping `mesh` grid that ripples on explosions.
-- **GAME STATE** — `state` ('menu' | 'play' | 'over'), `paused`, `speed`, and `G` (the per-run object from `newGame()`). When no run is active, `G` is `null` — update/render guard on this.
 - **WAVES** — `waveSpawns(n)` builds the spawn schedule (bosses every 8th wave); `hpMul`/scaling tune difficulty; `startWave`, `spawnEnemy`.
 - **COMBAT** — targeting (`nearestEnemies`, `pickTarget`), damage (`hurt`, `kill`, `leak`), per-turret firing in `fireTower()` (one branch per type).
 - **FX HELPERS** — particle/shard/banner/toast spawners.
@@ -46,7 +46,7 @@ npm test         # run unit tests (Vitest)
 - **FLOW** — `startRun`, `gameOver`, `toMenu`, menu/shop/pause handlers.
 - **LOOP** — `requestAnimationFrame`: `update(dt*speed)` then `render()` each frame. `dt` clamped to 0.034s.
 
-> **Next extraction step (not yet done):** the LAYOUT/STATE/WAVES/COMBAT/FX/RENDER/UI sections still share mutable state (`G`, geometry, `ctx`). Splitting them into their own modules means routing that shared state through a small `state.js` rather than relying on closure. Do this deliberately, one section at a time, verifying the game runs after each.
+> **Extraction progress:** run state now lives in `state.js` (`S.G` etc. — task A1 in BACKLOG.md). The remaining LAYOUT/WAVES/COMBAT/FX/RENDER/UI sections still share geometry and `ctx` via closure; extract them one at a time per BACKLOG.md tasks A2–A7, verifying the game runs after each.
 
 ## Admin overlay (dev only)
 
