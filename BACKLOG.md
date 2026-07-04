@@ -53,8 +53,8 @@ state.js      → util, config, save, tuning
 layout.js     → util, path
 fx.js         → state, layout, util
 hud.js        → state, util
-waves.js      → config, state, audio, fx, hud, tuning
-combat.js     → config, state, path, audio, fx, hud, layout, tuning
+waves.js      → config, state, audio, fx, tuning
+combat.js     → config, state, path, audio, fx, layout, tuning
 render.js     → state, config, path, layout, util
 ui.js         → state, waves, hud, fx, audio, save, config
 main.js       → everything (bootstrap, update(), loop, gameOver wiring)
@@ -62,7 +62,9 @@ main.js       → everything (bootstrap, update(), loop, gameOver wiring)
 
 Cycle-avoidance rules baked into the tasks: `gameOver()` stays in ui.js and is NOT
 called from `leak()` (A6 moves that check into `update()`); `banner`/`toast` live in
-fx.js (not ui.js) so waves/combat can use them.
+fx.js (not ui.js) so waves/combat can use them. **A12 is done** — simulation code sets
+`S.dirtyHud` instead of calling hud.js, so waves/combat need no hud import when
+extracted (ignore any `updateHUD()` mentions in the A5/A6 prose below).
 
 ### A1. Create `src/state.js` — shared run state object
 **Size:** M · **Deps:** none

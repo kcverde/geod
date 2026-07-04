@@ -38,7 +38,7 @@ function startWave(){
   S.G.wave++;S.G.waveActive=true;S.G.waveT=0;S.G.countdown=0;
   S.G.spawnQ=waveSpawns(S.G.wave);
   if(S.G.wave%8!==0){sfx('wave');banner('WAVE '+S.G.wave,'#22d8ff');}
-  updateHUD();updateWaveBtn();
+  S.dirtyHud=true;
 }
 function spawnEnemy(type){
   const d=ENEMIES[type],m=hpMul(S.G.wave)*tuning.enemyHp;
@@ -82,7 +82,7 @@ function kill(e,color){
   if(e.type==='boss'){S.G.shake=14;S.G.flash=.5;sfx('boom');buzz(60);banner('BOSS DOWN  +'+credits,'#54ff7c');}
   else if(e.type==='tank'){S.G.shake=Math.max(S.G.shake,5);sfx('boom');}
   else sfx('kill');
-  updateHUD();
+  S.dirtyHud=true;
 }
 function leak(e){
   const d=ENEMIES[e.type];
@@ -92,7 +92,7 @@ function leak(e){
   const[x,y]=posAt(totalLen-.1);burst(x,y,'#ff2255',24,1.6);
   meshImpulse(x,y,260);
   S.G.fx.push({k:'flash',x,y,r:1.6,ttl:.4,max:.4,color:'#ff2255'});
-  updateHUD();
+  S.dirtyHud=true;
   if(S.G.health<=0)gameOver();
 }
 function fireTower(tw,dt){
@@ -204,10 +204,10 @@ function update(dt){
     const bonus=Math.round((25+S.G.wave*6)*salvMul()*tuning.economy);
     S.G.credits+=bonus;S.G.score+=200+S.G.wave*50;
     sfx('cash');toast('WAVE CLEAR  +'+bonus+' ◈');
-    S.G.countdown=10;updateHUD();updateWaveBtn();}
-  // countdown
-  if(!S.G.waveActive&&S.G.countdown>0){S.G.countdown-=dt;
-    updateWaveBtn();
+    S.G.countdown=10;S.dirtyHud=true;}
+  // countdown (HUD refreshed only when the displayed second changes)
+  if(!S.G.waveActive&&S.G.countdown>0){const cs=Math.ceil(S.G.countdown);S.G.countdown-=dt;
+    if(Math.ceil(S.G.countdown)!==cs)S.dirtyHud=true;
     if(S.G.countdown<=0)startWave();}
 }
 
@@ -544,7 +544,7 @@ function buildTower(type,c,r){
   S.G.fx.push({k:'ring',x:c+.5,y:r+.5,r0:.1,r1:def.tiers[0].range,ttl:.4,max:.4,color:def.color});
   burst(c+.5,r+.5,def.color,10);
   meshImpulse(c+.5,r+.5,110);
-  closeSheets();openTowerPanel(tw);updateHUD();
+  closeSheets();openTowerPanel(tw);S.dirtyHud=true;
 }
 function openTowerPanel(tw){
   S.G.selTower=tw;S.G.sel=null;hide('buildSheet');
@@ -579,7 +579,7 @@ $('upgBtn').addEventListener('click',()=>{
   burst(tw.c+.5,tw.r+.5,TOWERS[tw.type].color,16,1.4);
   meshImpulse(tw.c+.5,tw.r+.5,130);
   S.G.fx.push({k:'ring',x:tw.c+.5,y:tw.r+.5,r0:.1,r1:TOWERS[tw.type].tiers[tw.tier].range,ttl:.45,max:.45,color:'#fff'});
-  openTowerPanel(tw);updateHUD();
+  openTowerPanel(tw);S.dirtyHud=true;
 });
 $('prioBtn').addEventListener('click',()=>{
   const tw=S.G&&S.G.selTower;if(!tw)return;
@@ -592,7 +592,7 @@ $('sellBtn').addEventListener('click',()=>{
   S.G.credits+=refund;S.G.towers.delete(tw.c+','+tw.r);
   sfx('sell');burst(tw.c+.5,tw.r+.5,'#8fb4d4',12);
   addText(tw.c+.5,tw.r+.5,'+'+refund,'#ffe93c');
-  closeSheets();updateHUD();
+  closeSheets();S.dirtyHud=true;
 });
 
 /* ---------- canvas input ---------- */
@@ -679,14 +679,12 @@ $('shopBtn').addEventListener('click',()=>{sfx('click');hide('menu');renderShop(
 $('shopBack').addEventListener('click',()=>{sfx('click');hide('shop');toMenu();});
 
 /* ============ LOOP ============ */
-let last=performance.now(),hudTick=0;
+let last=performance.now();
 function loop(now){
   requestAnimationFrame(loop);
   let dt=Math.min(.034,(now-last)/1000);last=now;
-  if(S.state==='play'&&!S.paused){
-    update(dt*S.speed*GAME_SPEED*tuning.gameSpeed);
-    hudTick+=dt;if(hudTick>.25){hudTick=0;if(S.G.waveActive)updateWaveBtn();}
-  }
+  if(S.state==='play'&&!S.paused)update(dt*S.speed*GAME_SPEED*tuning.gameSpeed);
+  if(S.dirtyHud){S.dirtyHud=false;updateHUD();updateWaveBtn();}
   render();
 }
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&S.state==='play')S.paused||($('pauseBtn').click());});
