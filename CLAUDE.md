@@ -33,6 +33,7 @@ npm test         # run unit tests (Vitest)
 | `state.js` | Shared mutable run state: the `S` object (`S.state` 'menu' \| 'play' \| 'over', `S.paused`, `S.speed`, `S.G`), `newGame()`, and the `dmgMul`/`salvMul` multipliers. `S.G` is the per-run object; `null` when no run is active — update/render guard on this. |
 | `layout.js` | Canvas + `ctx`, sizing/DPR (`resize`), grid→pixel helpers `cx()`/`cy()`/`CS`, pre-rendered nebula/vignette (`buildBg`), cached glow sprites (`glow`/`blitGlow`), parallax `stars`, and the warping `mesh` grid (`meshImpulse`/`meshUpdate`). Scalars (`W`,`H`,`CS`,…) are `export let` live bindings — only `resize()` writes them. |
 | `fx.js` | Particle/shard/floating-text spawners (`burst`, `shatter`, `addText` — write into `S.G` arrays) plus the `banner`/`toast` DOM flourishes. Lives below the UI layer so waves/combat can use it. |
+| `hud.js` | `updateHUD` + `updateWaveBtn` — sync the top HUD / wave button to `S.G`. Depends only on state, so waves/combat can call them without pulling in the UI layer. |
 | `tuning.js` | Dev balance multipliers (`tuning` object) + localStorage persistence. Read at the game's balance chokepoints. |
 | `admin.js` | Dev-only tuning overlay (sliders + debug actions). Loaded dynamically; see below. |
 
@@ -42,11 +43,11 @@ npm test         # run unit tests (Vitest)
 - **COMBAT** — targeting (`nearestEnemies`, `pickTarget`), damage (`hurt`, `kill`, `leak`), per-turret firing in `fireTower()` (one branch per type).
 - **UPDATE** — `update(dt)`: the simulation tick (spawns, enemies, towers, projectiles, FX, wave/countdown).
 - **RENDER** — `render()` + `drawTower`/`drawEnemy`. Canvas 2D; uses `globalCompositeOperation='lighter'` heavily for the neon glow.
-- **HUD / UI** — DOM overlays + event listeners; `updateHUD`/`updateWaveBtn` sync DOM to state.
+- **UI** — DOM overlays + event listeners (build/tower sheets, shop, menu buttons, canvas input).
 - **FLOW** — `startRun`, `gameOver`, `toMenu`, menu/shop/pause handlers.
 - **LOOP** — `requestAnimationFrame`: `update(dt*speed)` then `render()` each frame. `dt` clamped to 0.034s.
 
-> **Extraction progress:** run state lives in `state.js` (A1), canvas/geometry/visual-layer code in `layout.js` (A2), and fx spawners in `fx.js` (A3). The remaining WAVES/COMBAT/RENDER/UI sections still live in main.js's IIFE; extract them one at a time per BACKLOG.md tasks A4–A7, verifying the game runs after each.
+> **Extraction progress:** run state lives in `state.js` (A1), canvas/geometry/visual-layer code in `layout.js` (A2), fx spawners in `fx.js` (A3), and HUD sync in `hud.js` (A4). The remaining WAVES/COMBAT/RENDER/UI sections still live in main.js's IIFE; extract them per BACKLOG.md tasks A5–A7 (A12, the HUD dirty flag, slots in next).
 
 ## Admin overlay (dev only)
 

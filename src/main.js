@@ -9,6 +9,7 @@ import { S, newGame, dmgMul, salvMul } from './state.js';
 import { cv, ctx, W, H, CS, OX, OY, DPR, cx, cy, resize, stars, bgCanvas, vigCanvas,
   glow, blitGlow, mesh, meshImpulse, meshUpdate } from './layout.js';
 import { burst, shatter, addText, banner, toast } from './fx.js';
+import { updateHUD, updateWaveBtn } from './hud.js';
 
 (()=>{
 'use strict';
@@ -494,31 +495,7 @@ function drawEnemy(e,t){
       ctx.fillRect(x-w/2,y-s-12,w*clamp(e.shield/e.shieldMax,0,1),2);}}
 }
 
-/* ============ HUD / UI ============ */
-function updateHUD(){
-  if(!S.G)return;
-  const h=Math.max(0,S.G.health);
-  $('hudHealth').textContent=h>8?'✚'.repeat(8)+' +'+(h-8):'✚'.repeat(h)||'—';
-  $('hudCredits').textContent='◈ '+S.G.credits;
-  $('hudScore').textContent=S.G.score.toLocaleString();
-  $('hudMult').textContent='×'+S.G.mult.toFixed(1)+(S.G.streak>0?'  ('+S.G.streak+' streak)':'');
-  $('hudWave').textContent='WAVE '+Math.max(1,S.G.wave+(S.G.waveActive?0:1));
-}
-function updateWaveBtn(){
-  const b=$('waveBtn');
-  if(!S.G)return;
-  if(S.G.waveActive){
-    const left=S.G.spawnQ.length+S.G.enemies.length;
-    b.textContent='WAVE '+S.G.wave+' — '+left+' HOSTILE'+(left===1?'':'S');
-    b.disabled=true;b.classList.remove('pink');
-  }else{
-    const n=S.G.wave+1;
-    const bonus=Math.ceil(S.G.countdown*(2+S.G.wave*.5));
-    b.textContent=S.G.wave===0?'DEPLOY WAVE 1  ('+Math.ceil(S.G.countdown)+')'
-      :'CALL WAVE '+n+'  +'+bonus+' ◈  ('+Math.ceil(S.G.countdown)+')';
-    b.disabled=false;b.classList.add('pink');
-  }
-}
+/* ============ UI ============ */
 $('waveBtn').addEventListener('click',()=>{
   if(!S.G||S.G.waveActive)return;
   audioInit();
