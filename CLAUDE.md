@@ -24,7 +24,7 @@ npm test         # run unit tests (Vitest)
 
 | File | Responsibility |
 | ---- | -------------- |
-| `main.js` | Bootstrap, game state (`state`, `G`), update tick, render, HUD/UI wiring, game loop. Imports from all the modules below. Still the largest file — the tightly-coupled core lives here. |
+| `main.js` | Bootstrap + the two per-frame entry points: `update(dt)` (simulation tick: spawns, enemies, towers, projectiles, FX, wave/countdown, game-over health check) and the rAF `loop` (`update` → flush `S.dirtyHud` → `render`; `dt` clamped to 0.034s). Also the visibility auto-pause and the dev-only `admin.js` dynamic import. ~100 lines. |
 | `config.js` | Data tables: `TOWERS` (5 types × 3 tiers + `up` costs), `ENEMIES` (6 types), `SHOP` (lab upgrades), plus global scalars `SPAWN_COUNT_SCALE` / `GAME_SPEED`. **Primary balance knobs** — the real balance lives here; the dev overlay ships neutral (1×). |
 | `path.js` | `GW`×`GH` grid (9×14), waypoints `WP`, `pathCells` (non-buildable tiles), and `posAt(t)`/`dirAt(t)` arc-length interpolation along the lane. |
 | `save.js` | `meta` object + `localStorage` persistence (key `neonGridDefense.v1`): cores, best scores, `meta.up` upgrades, `meta.unlocked` turrets. |
@@ -36,18 +36,17 @@ npm test         # run unit tests (Vitest)
 | `hud.js` | `updateHUD` + `updateWaveBtn` — sync the top HUD / wave button to `S.G`. Simulation code never calls these: it sets `S.dirtyHud=true` and the loop flushes once per frame (countdown ticks only dirty when the displayed second changes). |
 | `waves.js` | `waveSpawns(n)` (pure schedule builder — bosses every 8th wave), `hpMul` difficulty scaling, `startWave` (owns the wave/boss banner + sfx side effects), `spawnEnemy`. |
 | `combat.js` | Targeting (`nearestEnemies`, `pickTarget`), damage (`hurt`, `kill`), `leak` (drains health only — the game-over check lives in `update()`), and per-turret firing in `fireTower()` (one branch per type). |
+| `render.js` | `render()` + `drawTower`/`drawEnemy`. Canvas 2D; uses `globalCompositeOperation='lighter'` heavily for the neon glow. Draw-only — reads `S.G`, never mutates it. |
+| `ui.js` | DOM overlays + event listeners (build/tower sheets, shop, menu buttons, canvas input) and the flow entry points `startRun`/`gameOver`/`toMenu`. Listeners register at import time. |
 | `tuning.js` | Dev balance multipliers (`tuning` object) + localStorage persistence. Read at the game's balance chokepoints. |
 | `admin.js` | Dev-only tuning overlay (sliders + debug actions). Loaded dynamically; see below. |
 
-`src/main.js` is still one IIFE internally, organized into commented sections — the seams for further extraction are visible:
-
-- **UPDATE** — `update(dt)`: the simulation tick (spawns, enemies, towers, projectiles, FX, wave/countdown) plus the game-over health check.
-- **RENDER** — `render()` + `drawTower`/`drawEnemy`. Canvas 2D; uses `globalCompositeOperation='lighter'` heavily for the neon glow.
-- **UI** — DOM overlays + event listeners (build/tower sheets, shop, menu buttons, canvas input).
-- **FLOW** — `startRun`, `gameOver`, `toMenu`, menu/shop/pause handlers.
-- **LOOP** — `requestAnimationFrame`: `update(dt*speed)`, flush `S.dirtyHud` → `updateHUD`/`updateWaveBtn`, then `render()`. `dt` clamped to 0.034s.
-
-> **Extraction progress:** run state lives in `state.js` (A1), canvas/geometry/visual-layer code in `layout.js` (A2), fx spawners in `fx.js` (A3), HUD sync in `hud.js` (A4) behind the `S.dirtyHud` flag (A12), wave generation in `waves.js` (A5, with tests), and targeting/damage/firing in `combat.js` (A6). Only UPDATE/RENDER/UI remain in main.js's IIFE — task A7 finishes the job.
+Module dependency rule (BACKLOG.md section A, tasks A1–A7 + A12, all done): imports
+point downward only — `util/config/path/save/audio/tuning` ← `state` ← `layout` ←
+`fx/hud` ← `waves/combat/render` ← `ui` ← `main`. Simulation code (`waves`, `combat`)
+never touches hud/ui: it sets `S.dirtyHud` and the loop flushes; `leak()` never calls
+`gameOver()` (main.js's `update()` owns the death check). Keep new code on this DAG —
+no upward or cyclic imports.
 
 ## Admin overlay (dev only)
 
