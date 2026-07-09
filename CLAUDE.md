@@ -35,19 +35,19 @@ npm test         # run unit tests (Vitest)
 | `fx.js` | Particle/shard/floating-text spawners (`burst`, `shatter`, `addText` — write into `S.G` arrays) plus the `banner`/`toast` DOM flourishes. Lives below the UI layer so waves/combat can use it. |
 | `hud.js` | `updateHUD` + `updateWaveBtn` — sync the top HUD / wave button to `S.G`. Simulation code never calls these: it sets `S.dirtyHud=true` and the loop flushes once per frame (countdown ticks only dirty when the displayed second changes). |
 | `waves.js` | `waveSpawns(n)` (pure schedule builder — bosses every 8th wave), `hpMul` difficulty scaling, `startWave` (owns the wave/boss banner + sfx side effects), `spawnEnemy`. |
+| `combat.js` | Targeting (`nearestEnemies`, `pickTarget`), damage (`hurt`, `kill`), `leak` (drains health only — the game-over check lives in `update()`), and per-turret firing in `fireTower()` (one branch per type). |
 | `tuning.js` | Dev balance multipliers (`tuning` object) + localStorage persistence. Read at the game's balance chokepoints. |
 | `admin.js` | Dev-only tuning overlay (sliders + debug actions). Loaded dynamically; see below. |
 
 `src/main.js` is still one IIFE internally, organized into commented sections — the seams for further extraction are visible:
 
-- **COMBAT** — targeting (`nearestEnemies`, `pickTarget`), damage (`hurt`, `kill`, `leak`), per-turret firing in `fireTower()` (one branch per type).
-- **UPDATE** — `update(dt)`: the simulation tick (spawns, enemies, towers, projectiles, FX, wave/countdown).
+- **UPDATE** — `update(dt)`: the simulation tick (spawns, enemies, towers, projectiles, FX, wave/countdown) plus the game-over health check.
 - **RENDER** — `render()` + `drawTower`/`drawEnemy`. Canvas 2D; uses `globalCompositeOperation='lighter'` heavily for the neon glow.
 - **UI** — DOM overlays + event listeners (build/tower sheets, shop, menu buttons, canvas input).
 - **FLOW** — `startRun`, `gameOver`, `toMenu`, menu/shop/pause handlers.
 - **LOOP** — `requestAnimationFrame`: `update(dt*speed)`, flush `S.dirtyHud` → `updateHUD`/`updateWaveBtn`, then `render()`. `dt` clamped to 0.034s.
 
-> **Extraction progress:** run state lives in `state.js` (A1), canvas/geometry/visual-layer code in `layout.js` (A2), fx spawners in `fx.js` (A3), HUD sync in `hud.js` (A4) behind the `S.dirtyHud` flag (A12), and wave generation in `waves.js` (A5, with tests). The remaining COMBAT/RENDER/UI sections still live in main.js's IIFE; extract them per BACKLOG.md tasks A6–A7.
+> **Extraction progress:** run state lives in `state.js` (A1), canvas/geometry/visual-layer code in `layout.js` (A2), fx spawners in `fx.js` (A3), HUD sync in `hud.js` (A4) behind the `S.dirtyHud` flag (A12), wave generation in `waves.js` (A5, with tests), and targeting/damage/firing in `combat.js` (A6). Only UPDATE/RENDER/UI remain in main.js's IIFE — task A7 finishes the job.
 
 ## Admin overlay (dev only)
 
