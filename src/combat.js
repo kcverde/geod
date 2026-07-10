@@ -22,7 +22,7 @@ export function pickTarget(list,prio){if(!list.length)return null;
     else{if(c.e.t>best.e.t)best=c;}}
   return best;}
 export function hurt(e,dmg,color){
-  e.lastHit=S.G.time;
+  e.lastHit=S.G.time;e.hitT=S.G.time; // hitT drives the white hit-flash in drawEnemy
   if(e.shield>0){e.shield-=dmg;if(e.shield<0){e.hp+=e.shield;e.shield=0;}}
   else e.hp-=dmg;
   if(e.hp<=0&&!e.dead){e.dead=true;kill(e,color);}
@@ -31,9 +31,12 @@ export function kill(e,color){
   const d=ENEMIES[e.type];
   const credits=Math.round(d.bounty*salvMul()*tuning.economy);
   S.G.credits+=credits;S.G.kills++;
+  const mb=S.G.mult;
   S.G.streak++;S.G.mult=Math.min(8,1+S.G.streak*.1);
   S.G.score+=Math.round(d.score*S.G.mult);
   const[x,y]=posAt(e.t);
+  for(const m of[2,4,6,8])if(mb<m&&S.G.mult>=m){ // milestone crossed this kill
+    banner('×'+m+' MULTIPLIER','#ffe93c');sfx('cash');meshImpulse(x,y,160);break;}
   burst(x,y,e.color,e.type==='boss'?60:e.type==='tank'?22:10,e.type==='boss'?3:1);
   shatter(x,y,e.color,e.type==='boss'?18:e.type==='tank'?10:6,e.r*2.4);
   meshImpulse(x,y,e.type==='boss'?340:e.type==='tank'?170:75);

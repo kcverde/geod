@@ -231,7 +231,8 @@ function drawEnemy(e,t){
   ctx.drawImage(glow(e.color),x-s*1.7,y-s*1.7,s*3.4,s*3.4);
   ctx.restore();ctx.globalAlpha=1;
   ctx.save();ctx.translate(x,y);
-  ctx.strokeStyle=slowed?'#9be8ff':e.color;
+  const hit=e.hitT&&S.G.time-e.hitT<.08;
+  ctx.strokeStyle=hit?'#fff':slowed?'#9be8ff':e.color;
   const dual=(draw)=>{ctx.globalAlpha=.25;ctx.lineWidth=5;draw();ctx.stroke();
     ctx.globalAlpha=1;ctx.lineWidth=1.8;draw();ctx.stroke();};
   if(e.type==='drone'){
