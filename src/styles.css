@@ -61,6 +61,7 @@
   .card.locked{filter:grayscale(.9);opacity:.5}
   .card.broke{opacity:.45}
   .card:active{transform:scale(.95)}
+  .card.armed{outline:2px solid currentColor;transform:scale(1.05)}
 
   #towerInfo{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px}
   #towerName{font-size:17px;font-weight:700;letter-spacing:1px}

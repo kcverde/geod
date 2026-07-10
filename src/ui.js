@@ -27,13 +27,14 @@ $('abandonBtn').addEventListener('click',()=>{S.paused=false;hide('pauseOv');gam
 /* ---------- build / tower sheets ---------- */
 function show(id){$(id).classList.add('show');}
 function hide(id){$(id).classList.remove('show');}
-function closeSheets(){hide('buildSheet');hide('towerSheet');if(S.G){S.G.sel=null;S.G.selTower=null;}}
+function closeSheets(){hide('buildSheet');hide('towerSheet');if(S.G){S.G.sel=null;S.G.selTower=null;S.G.preview=null;}}
 $('buildClose').addEventListener('click',closeSheets);
 $('towerClose').addEventListener('click',closeSheets);
 
 function openBuild(c,r){
-  S.G.sel=[c,r];S.G.selTower=null;hide('towerSheet');
+  S.G.sel=[c,r];S.G.selTower=null;S.G.preview=null;hide('towerSheet');
   const wrap=$('buildCards');wrap.innerHTML='';
+  let armed=null; // two-tap confirm: first tap previews range, second builds
   for(const[key,def]of Object.entries(TOWERS)){
     const locked=def.lock&&!meta.unlocked[key];
     const broke=S.G.credits<def.cost;
@@ -47,6 +48,12 @@ function openBuild(c,r){
       <div class="cost">${locked?'🔒':'◈ '+def.cost}</div>`;
     el.addEventListener('click',()=>{
       if(locked){sfx('deny');toast('Unlock '+def.name+' in the UPGRADE LAB');return;}
+      if(armed!==key){ // first tap: arm this card + show its range on the tile
+        armed=key;S.G.preview={c,r,type:key};
+        for(const s of wrap.children){s.classList.remove('armed');
+          if(s.dataset.cost)s.querySelector('.cost').textContent='◈ '+s.dataset.cost;}
+        el.classList.add('armed');el.querySelector('.cost').textContent='TAP TO CONFIRM';
+        sfx('click');return;}
       if(S.G.credits<def.cost){sfx('deny');toast('Not enough credits');return;}
       buildTower(key,c,r);});
     wrap.appendChild(el);}

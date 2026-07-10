@@ -103,6 +103,11 @@ export function render(){
     ctx.setLineDash([6,6]);
     ctx.beginPath();ctx.arc(cx(tw.c+.5),cy(tw.r+.5),st.range*CS,0,TAU);ctx.stroke();
     ctx.setLineDash([]);ctx.globalAlpha=1;}
+  if(S.G.preview){const p=S.G.preview,def=TOWERS[p.type];
+    ctx.strokeStyle=def.color;ctx.globalAlpha=.4;ctx.lineWidth=1.5;
+    ctx.setLineDash([6,6]);
+    ctx.beginPath();ctx.arc(cx(p.c+.5),cy(p.r+.5),def.tiers[0].range*CS,0,TAU);ctx.stroke();
+    ctx.setLineDash([]);ctx.globalAlpha=1;}
   // towers
   for(const tw of S.G.towers.values())drawTower(tw,t);
   // enemies
