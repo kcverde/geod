@@ -136,11 +136,14 @@ export function gameOver(){
   if(S.state==='over'||!S.G)return;
   S.state='over';closeSheets();
   const earned=S.G.wave*2+Math.floor(S.G.score/4000);
+  const newBest=S.G.wave>meta.bestWave||S.G.score>meta.bestScore;
   meta.cores+=earned;
   meta.bestWave=Math.max(meta.bestWave,S.G.wave);
   meta.bestScore=Math.max(meta.bestScore,S.G.score);
   saveMeta();
   sfx('over');buzz([60,60,120]);
+  $('ovBest').style.display=newBest?'':'none';
+  if(newBest)sfx('upgrade');
   $('ovWave').textContent='SURVIVED '+S.G.wave+' WAVE'+(S.G.wave===1?'':'S');
   $('ovScore').textContent=S.G.score.toLocaleString();
   $('ovKills').textContent=S.G.kills;
