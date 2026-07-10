@@ -39,6 +39,7 @@ function openBuild(c,r){
     const broke=S.G.credits<def.cost;
     const el=document.createElement('div');
     el.className='card'+(locked?' locked':broke?' broke':'');
+    if(!locked)el.dataset.cost=def.cost; // updateHUD re-checks affordability live
     el.style.borderColor=def.color;el.style.color=def.color;
     el.style.boxShadow=`0 0 10px ${def.color}33,inset 0 0 8px ${def.color}11`;
     el.innerHTML=`<div class="ic">${def.icon}</div><div class="nm">${def.name}</div>
