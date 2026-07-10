@@ -35,6 +35,9 @@ function update(dt){
   // projectiles
   for(const p of S.G.projs){
     if(p.k==='bolt'){
+      if(!p.tgt||p.tgt.dead){ // target died mid-flight: curve to a close neighbor instead of flying off
+        const l=nearestEnemies(p.x,p.y,1.5);
+        if(l.length){let b=l[0];for(const c of l)if(c.d<b.d)b=c;p.tgt=b.e;}}
       if(p.tgt&&!p.tgt.dead){const[tx,ty]=posAt(p.tgt.t);
         const a=Math.atan2(ty-p.y,tx-p.x);p.vx=Math.cos(a)*p.spd;p.vy=Math.sin(a)*p.spd;}
       p.x+=p.vx*dt;p.y+=p.vy*dt;

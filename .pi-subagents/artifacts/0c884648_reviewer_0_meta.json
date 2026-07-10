@@ -1,0 +1,37 @@
+{
+  "runId": "0c884648",
+  "agent": "reviewer",
+  "task": "Read-only review of /Users/kverde/dev/geod NEON GRID DEFENSE. Do not edit. Find only concrete evidence-backed bugs/regressions/maintenance issues with file paths/lines. Be concise; ignore speculative style issues. Note tests/build status if checked by parent: npm test and npm run build pass.",
+  "exitCode": 0,
+  "usage": {
+    "input": 58889,
+    "output": 2060,
+    "cacheRead": 22528,
+    "cacheWrite": 0,
+    "cost": 0.36750900000000003,
+    "turns": 6
+  },
+  "model": "openai-codex/gpt-5.5:high",
+  "attemptedModels": [
+    "openai-codex/gpt-5.5:high"
+  ],
+  "modelAttempts": [
+    {
+      "model": "openai-codex/gpt-5.5:high",
+      "success": true,
+      "exitCode": 0,
+      "usage": {
+        "input": 58889,
+        "output": 2060,
+        "cacheRead": 22528,
+        "cacheWrite": 0,
+        "cost": 0.36750900000000003,
+        "turns": 6
+      }
+    }
+  ],
+  "durationMs": 61877,
+  "toolCount": 12,
+  "transcriptPath": "/Users/kverde/dev/geod/.pi-subagents/artifacts/0c884648_reviewer_0_transcript.jsonl",
+  "timestamp": 1783646774177
+}
