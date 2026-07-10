@@ -90,7 +90,10 @@ let last=performance.now();
 function loop(now){
   requestAnimationFrame(loop);
   let dt=Math.min(.034,(now-last)/1000);last=now;
-  if(S.state==='play'&&!S.paused)update(dt*S.speed*GAME_SPEED*tuning.gameSpeed);
+  if(S.state==='play'&&!S.paused){
+    if(S.slowmo>0){S.slowmo-=dt;dt*=.35;} // boss-kill slow-mo beat (wall-clock, ticks only while playing)
+    update(dt*S.speed*GAME_SPEED*tuning.gameSpeed);
+  }
   if(S.dirtyHud){S.dirtyHud=false;updateHUD();updateWaveBtn();}
   render();
 }

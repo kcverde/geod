@@ -43,7 +43,7 @@ export function kill(e,color){
   meshImpulse(x,y,e.type==='boss'?340:e.type==='tank'?170:75);
   S.G.fx.push({k:'flash',x,y,r:e.type==='boss'?2.6:e.r*2.6,ttl:.3,max:.3,color:e.color});
   addText(x,y,'+'+credits,'#ffe93c');
-  if(e.type==='boss'){S.G.shake=14;S.G.flash=.5;sfx('boom');buzz(60);banner('BOSS DOWN  +'+credits,'#54ff7c');}
+  if(e.type==='boss'){S.G.shake=14;S.G.flash=.5;S.slowmo=.9;sfx('boom');buzz(60);banner('BOSS DOWN  +'+credits,'#54ff7c');}
   else if(e.type==='tank'){S.G.shake=Math.max(S.G.shake,5);sfx('boom');}
   else sfx('kill');
   S.dirtyHud=true;
