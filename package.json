@@ -8,9 +8,11 @@
     "build": "vite build",
     "preview": "vite preview",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "icons": "node scripts/icons.mjs"
   },
   "devDependencies": {
+    "sharp": "^0.35.3",
     "vite": "^6.0.0",
     "vitest": "^2.1.0"
   }

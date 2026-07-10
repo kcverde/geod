@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- NEON GRID DEFENSE app icon. Source of truth — scripts/icons.mjs renders all
+       PNG sizes (maskable variant swaps rx="96" for rx="0"). Colors match the game:
+       bg #04060c, reactor cyan #22d8ff, portal pink #ff2e88. Content stays inside
+       the maskable safe zone (~80% circle). -->
+  <defs>
+    <radialGradient id="glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#22d8ff" stop-opacity=".55"/>
+      <stop offset="60%" stop-color="#22d8ff" stop-opacity=".18"/>
+      <stop offset="100%" stop-color="#22d8ff" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="core" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="#9beeff"/>
+    </radialGradient>
+  </defs>
+  <rect width="512" height="512" rx="96" fill="#04060c"/>
+  <g stroke="#1a3350" stroke-width="2" opacity=".55">
+    <path d="M128 72V440M256 72V440M384 72V440M72 128H440M72 256H440M72 384H440"/>
+  </g>
+  <circle cx="256" cy="256" r="150" fill="url(#glow)"/>
+  <circle cx="256" cy="256" r="148" fill="none" stroke="#ff2e88" stroke-width="10" stroke-dasharray="46 26" stroke-linecap="round" opacity=".9"/>
+  <path d="M256 146 L366 256 L256 366 L146 256 Z" fill="none" stroke="#22d8ff" stroke-width="20" stroke-linejoin="round"/>
+  <path d="M256 186 L326 256 L256 326 L186 256 Z" fill="none" stroke="#7deaff" stroke-width="8" stroke-linejoin="round" opacity=".9"/>
+  <circle cx="256" cy="256" r="34" fill="url(#core)"/>
+</svg>
