@@ -69,12 +69,13 @@ function openTowerPanel(tw){
   $('towerName').style.color=def.color;
   $('towerTier').textContent='TIER '+(tw.tier+1)+' / 3';
   $('towerTier').style.color='#8fb4d4';
-  let stats=`DMG ${Math.round(st.dmg*dmgMul())} · RATE ${st.rate}/s · RANGE ${st.range}`;
-  if(st.aoe)stats+=` · SPLASH ${st.aoe}`;
+  const f1=v=>Math.round(v*10)/10,dps=s=>Math.round(s.dmg*dmgMul()*s.rate);
+  let stats=`DMG ${Math.round(st.dmg*dmgMul())} · RATE ${f1(st.rate)}/s · RANGE ${f1(st.range)} · DPS ${dps(st)}`;
+  if(st.aoe)stats+=` · SPLASH ${f1(st.aoe)}`;
   if(st.chains)stats+=` · CHAINS ${st.chains}`;
   if(st.slow)stats+=` · SLOW ${Math.round(st.slow*100)}%`;
   if(tw.tier<2){const nx=def.tiers[tw.tier+1];
-    stats+=`<br><span style="color:${def.color}">NEXT: DMG ${Math.round(nx.dmg*dmgMul())} · RATE ${nx.rate}/s · RANGE ${nx.range}</span>`;}
+    stats+=`<br><span style="color:${def.color}">NEXT: DMG ${Math.round(nx.dmg*dmgMul())} · RATE ${f1(nx.rate)}/s · RANGE ${f1(nx.range)} · DPS ${dps(nx)}</span>`;}
   $('towerStats').innerHTML=stats;
   const upg=$('upgBtn');
   if(tw.tier<2){const cost=def.up[tw.tier];
