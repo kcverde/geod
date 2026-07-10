@@ -1,5 +1,5 @@
 import { $, rand, TAU } from './util.js';
-import { GW, GH } from './path.js';
+import { GW, GH, WP, pathCells } from './path.js';
 
 /* ============ LAYOUT ============ */
 /* Canvas, sizing/DPR, grid→pixel helpers, and the pre-rendered/cached visual
@@ -14,7 +14,7 @@ export function resize(){DPR=Math.min(window.devicePixelRatio||1,3);
   const topPad=86,botPad=118;
   CS=Math.min(W/GW,(H-topPad-botPad)/GH);
   OX=(W-CS*GW)/2;OY=topPad+((H-topPad-botPad)-CS*GH)/2;
-  starsInit();buildBg();meshInit();}
+  starsInit();buildBg();buildPath();meshInit();}
 export const cx=x=>OX+x*CS, cy=y=>OY+y*CS;
 window.addEventListener('resize',resize);
 
@@ -43,6 +43,27 @@ function buildBg(){
   const vg=v.createRadialGradient(W/2,H/2,Math.min(W,H)*.42,W/2,H/2,Math.hypot(W,H)*.62);
   vg.addColorStop(0,'rgba(2,3,8,0)');vg.addColorStop(1,'rgba(2,3,8,.62)');
   v.fillStyle=vg;v.fillRect(0,0,W,H);
+}
+
+/* static path river + buildable dots, pre-rendered once per resize.
+   DPR-sized (unlike the soft bg gradients) so the lane edges stay crisp. */
+export let pathCanvas=null;
+function buildPath(){
+  pathCanvas=document.createElement('canvas');
+  pathCanvas.width=Math.max(1,Math.round(W*DPR));pathCanvas.height=Math.max(1,Math.round(H*DPR));
+  const c2=pathCanvas.getContext('2d');c2.setTransform(DPR,0,0,DPR,0,0);
+  // buildable cell dots
+  c2.fillStyle='rgba(80,140,200,.13)';
+  for(let c=0;c<GW;c++)for(let r=0;r<GH;r++){
+    if(pathCells.has(c+','+r))continue;
+    c2.fillRect(cx(c+.5)-1,cy(r+.5)-1,2,2);}
+  // path: layered energy river (static strokes; animated pulses/chevrons stay live in render)
+  const lane=()=>{c2.beginPath();c2.moveTo(cx(WP[0][0]),cy(WP[0][1]));
+    for(let i=1;i<WP.length;i++)c2.lineTo(cx(WP[i][0]),cy(WP[i][1]));};
+  c2.lineCap='round';c2.lineJoin='round';
+  lane();c2.strokeStyle='rgba(40,120,220,.16)';c2.lineWidth=CS*1.14;c2.stroke();
+  lane();c2.strokeStyle='rgba(46,130,235,.55)';c2.lineWidth=CS*.92;c2.stroke();
+  lane();c2.strokeStyle='rgba(9,20,42,.96)';c2.lineWidth=CS*.8;c2.stroke();
 }
 
 /* cached radial glow sprites per color */

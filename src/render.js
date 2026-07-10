@@ -1,8 +1,8 @@
 import { clamp, rand, TAU } from './util.js';
 import { S } from './state.js';
-import { GW, GH, WP, pathCells, BASE, totalLen, posAt, dirAt } from './path.js';
+import { GW, GH, WP, BASE, totalLen, posAt, dirAt } from './path.js';
 import { TOWERS } from './config.js';
-import { ctx, W, H, CS, DPR, cx, cy, stars, bgCanvas, vigCanvas, glow, blitGlow, mesh } from './layout.js';
+import { ctx, W, H, CS, DPR, cx, cy, stars, bgCanvas, vigCanvas, pathCanvas, glow, blitGlow, mesh } from './layout.js';
 
 /* ============ RENDER ============ */
 export function render(){
@@ -39,18 +39,11 @@ export function render(){
   for(let c=0;c<=GW;c++)for(let r=0;r<GH;r++){const a=P(c,r),b=P(c,r+1);
     if(disp(a)+disp(b)>2.5){ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);}}
   ctx.stroke();ctx.restore();
-  // buildable cell dots
-  ctx.fillStyle='rgba(80,140,200,.13)';
-  for(let c=0;c<GW;c++)for(let r=0;r<GH;r++){
-    if(pathCells.has(c+','+r))continue;
-    ctx.fillRect(cx(c+.5)-1,cy(r+.5)-1,2,2);}
-  // path: layered energy river
+  // static path river + buildable dots (pre-rendered in layout.js)
+  if(pathCanvas)ctx.drawImage(pathCanvas,0,0,W,H);
   const lane=()=>{ctx.beginPath();ctx.moveTo(cx(WP[0][0]),cy(WP[0][1]));
     for(let i=1;i<WP.length;i++)ctx.lineTo(cx(WP[i][0]),cy(WP[i][1]));};
   ctx.lineCap='round';ctx.lineJoin='round';
-  lane();ctx.strokeStyle='rgba(40,120,220,.16)';ctx.lineWidth=CS*1.14;ctx.stroke();
-  lane();ctx.strokeStyle='rgba(46,130,235,.55)';ctx.lineWidth=CS*.92;ctx.stroke();
-  lane();ctx.strokeStyle='rgba(9,20,42,.96)';ctx.lineWidth=CS*.8;ctx.stroke();
   // energy pulses flowing toward the reactor
   ctx.save();ctx.globalCompositeOperation='lighter';
   ctx.setLineDash([CS*.55,CS*1.4]);ctx.lineDashOffset=-((t*CS*1.5)%(CS*1.95));
