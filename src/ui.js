@@ -108,7 +108,7 @@ $('upgBtn').addEventListener('click',()=>{
 });
 $('prioBtn').addEventListener('click',()=>{
   const tw=S.G&&S.G.selTower;if(!tw)return;
-  tw.prio=tw.prio==='first'?'strong':'first';
+  tw.prio=tw.prio==='first'?'strong':tw.prio==='strong'?'last':'first';
   sfx('click');openTowerPanel(tw);
 });
 $('sellBtn').addEventListener('click',()=>{

@@ -19,6 +19,7 @@ export function pickTarget(list,prio){if(!list.length)return null;
   let best=list[0];
   for(const c of list){
     if(prio==='strong'){if(c.e.hp+c.e.shield>best.e.hp+best.e.shield)best=c;}
+    else if(prio==='last'){if(c.e.t<best.e.t)best=c;}
     else{if(c.e.t>best.e.t)best=c;}}
   return best;}
 export function hurt(e,dmg,color){
