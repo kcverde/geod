@@ -35,6 +35,5 @@ Where the project stands and what's planned next. (For architecture details see
 
 ## Notes / open questions
 
-- `GAME_SPEED = 1.1` (in `config.js`) stacks on the in-game 1×/2× button, so "1×" runs
-  at 1.1× and "2×" at 2.2×. May want to revisit — cleanest fix is to drop `GAME_SPEED`
-  toward `1.0` and nudge enemy speed / tower rate instead.
+- ~~`GAME_SPEED = 1.1` stacks on the 1×/2× button~~ — resolved (BACKLOG.md B6): folded
+  into enemy `spd` / tower `rate`; `GAME_SPEED` is `1.0` and the speed button is exact.
