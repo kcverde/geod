@@ -11,10 +11,10 @@ export function render(){
   if(bgCanvas)ctx.drawImage(bgCanvas,0,0,W,H);
   else{ctx.fillStyle='#04060c';ctx.fillRect(0,0,W,H);}
   const t=S.G?S.G.time:performance.now()/1000;
-  // parallax starfield (3 drifting layers)
+  // parallax starfield (3 drifting layers; static alpha in low-FX mode)
   for(const s of stars){
     ctx.fillStyle=s.col;
-    ctx.globalAlpha=(.16+.2*Math.sin(t*1.7+s.p))*(s.l+1)*.5;
+    ctx.globalAlpha=meta.lowFx?.2:(.16+.2*Math.sin(t*1.7+s.p))*(s.l+1)*.5;
     ctx.fillRect((s.x+t*s.spd)%W,s.y,s.r,s.r);}
   ctx.globalAlpha=1;
   if(!S.G){if(vigCanvas)ctx.drawImage(vigCanvas,0,0,W,H);return;}
@@ -30,7 +30,8 @@ export function render(){
   for(let c=0;c<=GW;c++){ctx.moveTo(P(c,0).x,P(c,0).y);
     for(let r=1;r<=GH;r++)ctx.lineTo(P(c,r).x,P(c,r).y);}
   ctx.stroke();
-  // displaced segments glow cyan
+  // displaced segments glow cyan (skipped in low-FX mode)
+  if(!meta.lowFx){
   ctx.save();ctx.globalCompositeOperation='lighter';
   ctx.strokeStyle='rgba(70,190,255,.3)';ctx.lineWidth=1.2;
   const disp=p=>Math.abs(p.x-p.rx)+Math.abs(p.y-p.ry);
@@ -39,7 +40,7 @@ export function render(){
     if(disp(a)+disp(b)>2.5){ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);}}
   for(let c=0;c<=GW;c++)for(let r=0;r<GH;r++){const a=P(c,r),b=P(c,r+1);
     if(disp(a)+disp(b)>2.5){ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);}}
-  ctx.stroke();ctx.restore();
+  ctx.stroke();ctx.restore();}
   // static path river + buildable dots (pre-rendered in layout.js)
   if(pathCanvas)ctx.drawImage(pathCanvas,0,0,W,H);
   const lane=()=>{ctx.beginPath();ctx.moveTo(cx(WP[0][0]),cy(WP[0][1]));
@@ -181,11 +182,12 @@ function drawTower(tw,t){
   const def=TOWERS[tw.type];
   const x=cx(tw.c+.5),y=cy(tw.r+.5),s=CS*.32;
   ctx.save();ctx.translate(x,y);
-  // glow halo + hex base plate
-  ctx.globalCompositeOperation='lighter';
-  ctx.globalAlpha=.26;
-  ctx.drawImage(glow(def.color),-CS*.62,-CS*.62,CS*1.24,CS*1.24);
-  ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';
+  // glow halo (skipped in low-FX mode) + hex base plate
+  if(!meta.lowFx){
+    ctx.globalCompositeOperation='lighter';
+    ctx.globalAlpha=.26;
+    ctx.drawImage(glow(def.color),-CS*.62,-CS*.62,CS*1.24,CS*1.24);
+    ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';}
   ctx.strokeStyle='rgba(130,180,230,.3)';ctx.lineWidth=1;
   ctx.beginPath();
   for(let i=0;i<6;i++){const a=i/6*TAU+Math.PI/6,R=CS*.43;
@@ -228,7 +230,8 @@ function drawEnemy(e,t){
   const x=cx(e.px),y=cy(e.py),s=e.r*CS*1.4; // position cached in update()'s enemy pass
   const[dx,dy]=dirAt(e.t);
   const slowed=S.G.time<e.slowUntil;
-  // motion trail + glow halo
+  // motion trail + glow halo (both skipped in low-FX mode)
+  if(!meta.lowFx){
   ctx.save();ctx.globalCompositeOperation='lighter';
   if(e.tr&&e.tr.length>=4){
     ctx.strokeStyle=e.color;ctx.lineCap='round';
@@ -238,7 +241,7 @@ function drawEnemy(e,t){
       ctx.lineTo(cx(e.tr[i+2]),cy(e.tr[i+3]));ctx.stroke();}}
   ctx.globalAlpha=e.type==='boss'?.5:.3;
   ctx.drawImage(glow(e.color),x-s*1.7,y-s*1.7,s*3.4,s*3.4);
-  ctx.restore();ctx.globalAlpha=1;
+  ctx.restore();ctx.globalAlpha=1;}
   ctx.save();ctx.translate(x,y);
   const hit=e.hitT&&S.G.time-e.hitT<.08;
   ctx.strokeStyle=hit?'#fff':slowed?'#9be8ff':e.color;

@@ -1,11 +1,13 @@
 import { $, rand, TAU } from './util.js';
 import { S } from './state.js';
+import { meta } from './save.js';
 
 /* ============ FX HELPERS ============ */
 /* Particle/shard/floating-text spawners (write into S.G arrays) plus the two
    DOM flourishes (banner, toast) — kept here, not in ui code, so waves/combat
    can use them without depending on the UI layer. */
 export function burst(x,y,color,n,pow){pow=pow||1;
+  if(meta.lowFx)n=Math.ceil(n/2);
   if(S.G.parts.length>450)return;
   for(let i=0;i<n;i++){const a=Math.random()*TAU,v=rand(.5,3.2)*pow;
     S.G.parts.push({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v,life:rand(.3,.8),max:.8,color,sz:rand(1.5,3.5)});}}

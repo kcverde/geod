@@ -167,7 +167,7 @@ export function toMenu(){
   $('mBestWave').textContent=meta.bestWave||'—';
   $('mBestScore').textContent=meta.bestScore?meta.bestScore.toLocaleString():'—';
   $('mCores').textContent=meta.cores;
-  muteLabel();
+  muteLabel();fxLabel();
   show('menu');
 }
 $('startBtn').addEventListener('click',()=>{audioInit();sfx('click');
@@ -179,6 +179,10 @@ $('ovMenuBtn').addEventListener('click',()=>{sfx('click');toMenu();});
 function muteLabel(){const t='SOUND: '+(meta.mute?'OFF':'ON');$('muteBtn').textContent=t;$('muteBtn2').textContent=t;}
 $('muteBtn').addEventListener('click',()=>{audioInit();setMute(!meta.mute);muteLabel();sfx('click');});
 $('muteBtn2').addEventListener('click',()=>{setMute(!meta.mute);muteLabel();sfx('click');});
+function fxLabel(){const t='FX: '+(meta.lowFx?'LITE':'FULL');$('fxBtn').textContent=t;$('fxBtn2').textContent=t;}
+const fxToggle=()=>{meta.lowFx=!meta.lowFx;saveMeta();fxLabel();sfx('click');};
+$('fxBtn').addEventListener('click',fxToggle);
+$('fxBtn2').addEventListener('click',fxToggle);
 
 /* ---------- shop ---------- */
 function shopCost(item){const lvl=item.unlock?(meta.unlocked[item.id]?1:0):meta.up[item.id];
