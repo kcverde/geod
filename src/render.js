@@ -168,6 +168,14 @@ export function render(){
     ctx.fillText(tx.txt,cx(tx.x),cy(tx.y));}
   ctx.globalAlpha=1;
   ctx.restore();
+  // boss HP bar (HUD-anchored, unaffected by shake)
+  const boss=S.G.enemies.find(e=>e.type==='boss');
+  if(boss){const bw=W*.7,bx0=(W-bw)/2,by0=92;
+    ctx.fillStyle='rgba(0,0,0,.6)';ctx.fillRect(bx0,by0,bw,6);
+    ctx.fillStyle='#ff2255';
+    ctx.fillRect(bx0,by0,bw*clamp((boss.hp+boss.shield)/(boss.maxHp+(boss.shieldMax||0)),0,1),6);
+    ctx.font='700 10px Orbitron,"Avenir Next",system-ui,sans-serif';ctx.textAlign='center';
+    ctx.fillText('BOSS',W/2,by0-4);}
   if(vigCanvas)ctx.drawImage(vigCanvas,0,0,W,H);
   // leak flash
   if(S.G.flash>0){ctx.fillStyle='rgba(255,30,80,'+(S.G.flash*.25)+')';ctx.fillRect(0,0,W,H);}
