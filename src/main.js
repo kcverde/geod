@@ -25,6 +25,7 @@ function update(dt){
     const sm=S.G.time<e.slowUntil?e.slowMult:1;
     e.t+=e.spd*sm*dt;
     const[tpx,tpy]=posAt(e.t);
+    e.px=tpx;e.py=tpy; // per-tick position cache — targeting/draw read this instead of re-walking posAt
     e.tr.push(tpx,tpy);if(e.tr.length>12)e.tr.splice(0,2);
     if(e.shieldMax&&e.shield<e.shieldMax&&S.G.time-e.lastHit>2)e.shield=Math.min(e.shieldMax,e.shield+e.shieldMax*.12*dt);
     if(e.t>=totalLen){e.dead=true;leak(e);}}

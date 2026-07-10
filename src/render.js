@@ -228,8 +228,7 @@ function drawTower(tw,t){
   ctx.restore();ctx.globalAlpha=1;
 }
 function drawEnemy(e,t){
-  const[px,py]=posAt(e.t);
-  const x=cx(px),y=cy(py),s=e.r*CS*1.4;
+  const x=cx(e.px),y=cy(e.py),s=e.r*CS*1.4; // position cached in update()'s enemy pass
   const[dx,dy]=dirAt(e.t);
   const slowed=S.G.time<e.slowUntil;
   // motion trail + glow halo

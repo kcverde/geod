@@ -12,7 +12,7 @@ import { tuning } from './tuning.js';
    keeping combat free of any flow/UI dependency. */
 export function nearestEnemies(x,y,range){
   const out=[];for(const e of S.G.enemies){if(e.dead)continue;
-    const[ex,ey]=posAt(e.t);const d=Math.hypot(ex-x,ey-y);
+    const ex=e.px,ey=e.py,d=Math.hypot(ex-x,ey-y); // cached in update()'s enemy pass
     if(d<=range)out.push({e,d,ex,ey});}
   return out;}
 export function pickTarget(list,prio){if(!list.length)return null;
