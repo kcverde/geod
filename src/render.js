@@ -1,5 +1,6 @@
 import { clamp, rand, TAU } from './util.js';
 import { S } from './state.js';
+import { meta } from './save.js';
 import { GW, GH, WP, BASE, totalLen, posAt, dirAt } from './path.js';
 import { TOWERS } from './config.js';
 import { ctx, W, H, CS, DPR, cx, cy, stars, bgCanvas, vigCanvas, pathCanvas, glow, blitGlow, mesh } from './layout.js';
@@ -72,17 +73,20 @@ export function render(){
   ctx.globalAlpha=.7;ctx.lineWidth=1.2;
   ctx.beginPath();ctx.arc(ppx,ppy,CS*(.28+.07*Math.sin(t*3)),0,TAU);ctx.stroke();
   ctx.restore();ctx.globalAlpha=1;
-  // base reactor
+  // base reactor (color shifts with core damage: healthy cyan → worried amber → critical red+flicker)
   const bx=cx(BASE[0]+.5),by=cy(BASE[1]+.5);
   const pul=1+.08*Math.sin(t*3);
+  const hurtRatio=1-clamp(S.G.health/(10+meta.up.hp*2),0,1);
+  const rcol=hurtRatio>.66?'#ff2255':hurtRatio>.33?'#ffb020':'#22d8ff';
+  const flick=hurtRatio>.66?.8+.2*Math.sin(t*20):1;
   ctx.save();ctx.globalCompositeOperation='lighter';
-  blitGlow('#22d8ff',bx,by,CS*1.2*pul,.5);
-  ctx.strokeStyle='rgba(34,216,255,.55)';ctx.lineWidth=1.5;
+  blitGlow(rcol,bx,by,CS*1.2*pul,.5*flick);
+  ctx.strokeStyle=rcol;ctx.globalAlpha=.55*flick;ctx.lineWidth=1.5;
   ctx.beginPath();ctx.arc(bx,by,CS*.54,t*.9,t*.9+TAU*.72);ctx.stroke();
   ctx.beginPath();ctx.arc(bx,by,CS*.62,-t*.6,-t*.6+TAU*.55);ctx.stroke();
   ctx.restore();
   for(let i=0;i<2;i++){
-    ctx.strokeStyle=i?'#ffffff':'#22d8ff';ctx.lineWidth=i?2:5;ctx.globalAlpha=i?1:.3;
+    ctx.strokeStyle=i?'#ffffff':rcol;ctx.lineWidth=i?2:5;ctx.globalAlpha=(i?1:.3)*flick;
     ctx.beginPath();
     const R=CS*.36*pul*(1+i*.18);
     ctx.moveTo(bx,by-R);ctx.lineTo(bx+R,by);ctx.lineTo(bx,by+R);ctx.lineTo(bx-R,by);ctx.closePath();ctx.stroke();}
