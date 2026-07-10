@@ -137,6 +137,7 @@ export function startRun(){
   newGame();S.state='play';S.paused=false;S.speed=1;$('speedBtn').textContent='1×';
   hide('menu');hide('overOv');closeSheets();
   $('hud').style.display='flex';$('bar').style.display='flex';
+  $('wavePreview').innerHTML='';
   updateHUD();updateWaveBtn();
   banner('DEFEND THE REACTOR','#22d8ff');
 }

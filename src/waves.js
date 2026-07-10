@@ -1,4 +1,4 @@
-import { TAU } from './util.js';
+import { $, TAU } from './util.js';
 import { S } from './state.js';
 import { sfx, buzz } from './audio.js';
 import { banner } from './fx.js';
@@ -31,6 +31,7 @@ export function startWave(){
   S.G.spawnQ=waveSpawns(S.G.wave);
   if(S.G.wave%8===0){sfx('boss');banner('⚠ BOSS INBOUND ⚠','#ff2255');buzz(80);}
   else{sfx('wave');banner('WAVE '+S.G.wave,'#22d8ff');}
+  $('wavePreview').innerHTML='';
   S.dirtyHud=true;
 }
 export function spawnEnemy(type){

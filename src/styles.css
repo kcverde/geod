@@ -98,6 +98,10 @@
     font-size:26px;font-weight:800;letter-spacing:6px;opacity:0;transition:opacity .3s}
   #toast{position:fixed;bottom:130px;left:0;right:0;text-align:center;z-index:15;pointer-events:none;
     font-size:13px;letter-spacing:1px;color:#cfe9ff;opacity:0;transition:opacity .3s;text-shadow:0 0 8px rgba(34,216,255,.8)}
+  #wavePreview{position:fixed;bottom:calc(env(safe-area-inset-bottom,0px) + 84px);left:0;right:0;
+    text-align:center;z-index:5;pointer-events:none;
+    font-family:'Orbitron',"Avenir Next",system-ui,sans-serif;font-size:11px;letter-spacing:2px;color:#8fb4d4}
+  #wavePreview span{margin:0 5px;text-shadow:0 0 8px currentColor}
 
   /* ---------- dev admin overlay (dev builds only) ---------- */
   #admin{position:fixed;top:8px;left:8px;z-index:50;width:260px;max-height:90vh;overflow-y:auto;

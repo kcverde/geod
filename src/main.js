@@ -1,14 +1,14 @@
 import './styles.css';
 import { $ } from './util.js';
 import { GW, GH, posAt, totalLen } from './path.js';
-import { GAME_SPEED } from './config.js';
+import { ENEMIES, GAME_SPEED } from './config.js';
 import { tuning } from './tuning.js';
 import { S, salvMul } from './state.js';
 import { resize, meshImpulse, meshUpdate } from './layout.js';
 import { burst, toast } from './fx.js';
 import { sfx } from './audio.js';
 import { updateHUD, updateWaveBtn } from './hud.js';
-import { startWave, spawnEnemy } from './waves.js';
+import { startWave, spawnEnemy, waveSpawns } from './waves.js';
 import { nearestEnemies, hurt, leak, fireTower } from './combat.js';
 import { render } from './render.js';
 import { gameOver, toMenu } from './ui.js';
@@ -72,7 +72,12 @@ function update(dt){
     const bonus=Math.round((25+S.G.wave*6)*salvMul()*tuning.economy);
     S.G.credits+=bonus;S.G.score+=200+S.G.wave*50;
     sfx('cash');toast('WAVE CLEAR  +'+bonus+' ◈');
-    S.G.countdown=10;S.dirtyHud=true;}
+    S.G.countdown=10;S.dirtyHud=true;
+    // preview next wave's composition during the countdown (waveSpawns is pure)
+    const GLYPH={drone:'⬡',dart:'➤',swarm:'✳',tank:'⬢',shield:'◆',boss:'★'},cnt={};
+    for(const s of waveSpawns(S.G.wave+1))cnt[s.type]=(cnt[s.type]||0)+1;
+    $('wavePreview').innerHTML='INBOUND '+Object.entries(cnt)
+      .map(([t,n])=>`<span style="color:${ENEMIES[t].color}">${GLYPH[t]}×${n}</span>`).join('');}
   // countdown (HUD refreshed only when the displayed second changes)
   if(!S.G.waveActive&&S.G.countdown>0){const cs=Math.ceil(S.G.countdown);S.G.countdown-=dt;
     if(Math.ceil(S.G.countdown)!==cs)S.dirtyHud=true;
