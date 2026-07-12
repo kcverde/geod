@@ -1,5 +1,13 @@
 # NEON GRID DEFENSE — Master Backlog
 
+> **Superseded as the live tracker.** As of 2026-07-10, all remaining work here has
+> been filed as GitHub Issues (#6–#21) and is worked through the CONTRIBUTING.md
+> issue → branch → PR workflow. Five additional issues (#1–#5) came out of a separate
+> code-review pass and aren't reflected in this document at all — see the issue
+> tracker for the full live list, not this file. This document now serves as
+> historical design rationale and the detailed spec each issue links back to; task
+> IDs below are annotated with their issue number where one exists.
+
 ## Context
 
 The game is a working Vite + vanilla-JS mobile tower defense (portrait, canvas, neon
@@ -174,7 +182,7 @@ still damage the core, reaching 0 health still ends the run exactly once.
 **Done when:** full game loop identical; `npm run build` output size roughly unchanged;
 admin overlay works; CLAUDE.md reflects reality.
 
-### A8. Add ESLint (flat config, no formatter)
+### A8. Add ESLint (flat config, no formatter) — see issue #1 (Add CI and minimal ESLint checks)
 **Size:** S · **Deps:** none (nicer after A7)
 **Files:** new `eslint.config.js`, `package.json`
 **Steps:** `npm i -D eslint`; flat config with `languageOptions:{ecmaVersion:'latest',
@@ -183,14 +191,14 @@ sourceType:'module',globals:{...browser}}`; rules: `no-undef`, `no-unused-vars`
 Add `"lint":"eslint src tests"` script; fix any real findings (unused vars, typos).
 **Done when:** `npm run lint` exits 0; no stylistic churn in the diff.
 
-### A9. GitHub Actions CI — test + build on push
+### A9. GitHub Actions CI — test + build on push — see issue #1 (Add CI and minimal ESLint checks)
 **Size:** S · **Deps:** none
 **Files:** new `.github/workflows/ci.yml`
 **Steps:** single job: checkout, setup-node 20 with npm cache, `npm ci`,
 `npm run lint --if-present`, `npm test`, `npm run build`. Trigger on push + PR to main.
 **Done when:** workflow green on GitHub for the commit that adds it.
 
-### A10. Economy/combat math unit tests
+### A10. Economy/combat math unit tests — see issue #3 (Extract testable simulation and economy rules)
 **Size:** S · **Deps:** A5, A6 (functions must be importable)
 **Files:** new `tests/combat.test.js`
 **Steps:** with `S.G` seeded via `newGame()`: (a) `hurt` drains shield before hp;
@@ -201,7 +209,7 @@ Mock `sfx`/`buzz` via `vi.mock('../src/audio.js', ...)` so tests run headless (n
 AudioContext / DOM canvas needed — if fx.js touches DOM ids in `kill`, also mock fx).
 **Done when:** `npm test` green including the new file.
 
-### A11. Per-tower behavior registry — colocate fire/draw with stats
+### A11. Per-tower behavior registry — colocate fire/draw with stats — issue #6
 **Size:** M · **Deps:** best right after A6 (combat.js exists); adaptable to main.js
 **Files:** new `src/towers.js`, `src/combat.js` (`fireTower`), `src/render.js`
 (`drawTower`), `CLAUDE.md`
@@ -377,7 +385,7 @@ instead of leaving players to multiply: append `· DPS ${Math.round(st.dmg*dmgMu
 first→strong→last→first. Button label already derives from `tw.prio`.
 **Done when:** a LANCE set to LAST visibly snipes the rearmost enemy.
 
-### B10. Balance pass with the admin overlay
+### B10. Balance pass with the admin overlay — issue #7
 **Size:** M · **Deps:** best after B3/B6 (they shift effective difficulty)
 **Files:** `src/config.js` only (numbers), notes in commit message
 **Context:** target: a first-time player dies waves 6–10; an invested meta build
@@ -389,7 +397,7 @@ waves code; prefer config knobs first). Bake results; overlay ships neutral.
 **Done when:** documented before/after numbers in the commit; both reference builds hit
 the target bands.
 
-### B11. Contextual first-run hints (replace static tutorial reliance)
+### B11. Contextual first-run hints (replace static tutorial reliance) — issue #8
 **Size:** M · **Deps:** none
 **Files:** `src/main.js`, `src/save.js` (extend `meta` — additive key, no SAVE_KEY bump)
 **Steps:** add `meta.hints={build:false,upgrade:false,early:false}` default (additive
@@ -509,7 +517,7 @@ outputs in `public/icons/`
 Do these in order, after section A (they lean on the extracted modules; if done
 pre-extraction, substitute main.js for the named modules).
 
-### D1. Parametrize the path — `makePath(def)`
+### D1. Parametrize the path — `makePath(def)` — issue #9
 **Size:** M · **Deps:** A-section done (or adapt to main.js)
 **Files:** `src/path.js`, `tests/path.test.js`, all importers of path exports
 **Steps:**
@@ -525,7 +533,7 @@ pre-extraction, substitute main.js for the named modules).
    (straight 3-cell path) asserting totalLen/pathCells for it.
 **Done when:** game identical on the default path; tests cover both defs.
 
-### D2. Define 3 levels + config plumbing
+### D2. Define 3 levels + config plumbing — issue #10
 **Size:** M · **Deps:** D1
 **Files:** new `src/levels.js`, `src/state.js`, `src/save.js`
 **Steps:**
@@ -544,7 +552,7 @@ pre-extraction, substitute main.js for the named modules).
 **Done when:** hardcoding `S.level=LEVELS[1]` starts a run on the spiral map with
 correct pathing, enemies, and no rendering artifacts.
 
-### D3. Level-select UI
+### D3. Level-select UI — issue #11
 **Size:** M · **Deps:** D2
 **Files:** `index.html`, `src/styles.css`, `src/ui.js` (or main.js)
 **Steps:** new overlay `#levelOv` styled like the shop: one card per level (name,
@@ -566,7 +574,7 @@ gives native haptics/back-button, and the web build ships inside the AAB.
 (TWA/Bubblewrap would require hosting the PWA on HTTPS + asset-links; keep as
 fallback only.) Do E-tasks in order. E1–E2 are pure-web and valuable regardless.
 
-### E1. PWA manifest + meta
+### E1. PWA manifest + meta — issue #12
 **Size:** S · **Deps:** C8 (icons)
 **Files:** new `public/manifest.webmanifest`, `index.html`
 **Steps:** manifest: name "Neon Grid Defense", short_name "NeonGrid",
@@ -576,7 +584,7 @@ keep existing apple-mobile-web-app metas.
 **Done when:** Chrome DevTools → Application → Manifest shows no warnings;
 "Add to home screen" installs with correct icon and opens fullscreen portrait.
 
-### E2. Offline support via vite-plugin-pwa
+### E2. Offline support via vite-plugin-pwa — issue #13
 **Size:** S · **Deps:** E1
 **Files:** `vite.config.js`, `package.json`
 **Steps:** `npm i -D vite-plugin-pwa`; register with `registerType:'autoUpdate'`,
@@ -587,7 +595,7 @@ styles.css, drop the Google Fonts `<link>`. Prefer self-hosting.
 **Done when:** `npm run build && npm run preview`, load once, kill the network,
 reload — game fully playable offline with correct font.
 
-### E3. Add Capacitor + Android platform
+### E3. Add Capacitor + Android platform — issue #14
 **Size:** M · **Deps:** E1 (icons/manifest), machine needs Android Studio + JDK 17
 **Files:** `capacitor.config.ts` (new), `android/` (generated), `package.json`, `.gitignore`
 **Steps:**
@@ -602,7 +610,7 @@ reload — game fully playable offline with correct font.
 **Done when:** the game runs in the Android emulator from a clean checkout following
 README steps.
 
-### E4. Android polish: orientation lock, immersive mode, back button, haptics
+### E4. Android polish: orientation lock, immersive mode, back button, haptics — issue #15
 **Size:** M · **Deps:** E3
 **Files:** `android/app/src/main/AndroidManifest.xml`, `MainActivity.java` or styles,
 `src/main.js`/`src/ui.js`, `package.json`
@@ -620,7 +628,7 @@ README steps.
 **Done when:** on device: no status bar, portrait locked, back button steps sanely
 through UI instead of killing the app, kills thump.
 
-### E5. Release signing + AAB build
+### E5. Release signing + AAB build — issue #16
 **Size:** M · **Deps:** E3
 **Files:** `android/app/build.gradle`, `android/keystore.properties` (gitignored),
 `README.md`
@@ -638,7 +646,7 @@ through UI instead of killing the app, kills thump.
 **Done when:** `bundleRelease` produces a signed AAB; `bundletool` or Studio installs
 it on a device and it runs.
 
-### E6. Play Console listing prep (content, no code)
+### E6. Play Console listing prep (content, no code) — issue #17
 **Size:** M · **Deps:** E5 for the AAB; C8 for art
 **Files:** new `store/` dir in repo (listing text + assets), plus external Play Console
 **Steps:**
@@ -657,7 +665,7 @@ it on a device and it runs.
    ads declaration: none.
 **Done when:** all Console sections show green checkmarks except release.
 
-### E7. Internal testing → production rollout
+### E7. Internal testing → production rollout — issue #18
 **Size:** S · **Deps:** E5, E6
 **Steps:** upload AAB to Internal testing track, add own account as tester, install
 via the opt-in link, play a full run on-device checking: cold start <3s, audio after
@@ -670,14 +678,14 @@ waves. Fix-or-file anything found, then promote to Production with staged rollou
 
 # F. Misc / infra
 
-### F1. Player-facing README refresh
+### F1. Player-facing README refresh — issue #19
 **Size:** S · **Deps:** none
 **Steps:** restructure README: hero screenshot, one-paragraph pitch, how to play
 (3 bullets), local dev quickstart, links to ROADMAP/CLAUDE/store (when live). Keep dev
 details in CLAUDE.md — don't duplicate.
 **Done when:** a stranger can understand and run the game from README alone.
 
-### F2. FPS + entity-count readout in the admin overlay
+### F2. FPS + entity-count readout in the admin overlay — issue #20
 **Size:** S · **Deps:** none
 **Files:** `src/admin.js`, `src/main.js` (expose counts via the existing `initAdmin` API)
 **Steps:** extend the `initAdmin` wiring object with `getStats:()=>({fps,enemies:
@@ -686,7 +694,7 @@ S.G?.enemies.length??0,projs:...,parts:...})`; main.js computes fps as an EMA of
 renders a one-line readout updated every 500ms.
 **Done when:** backtick panel shows live fps/entity counts during heavy waves.
 
-### F3. Save export/import (clipboard)
+### F3. Save export/import (clipboard) — issue #21
 **Size:** S · **Deps:** none
 **Files:** `src/main.js`/`ui.js` (pause overlay), `index.html`
 **Context:** localStorage dies with browser data clears; phones swap. Cheapest
@@ -700,7 +708,7 @@ nested-merge used in save.js load and calls `saveMeta()`+`toMenu()`.
 **Done when:** export on browser A → import on browser B transfers cores/unlocks/bests;
 malformed paste shows an error toast and changes nothing.
 
-### F4. Self-host the Orbitron font (if not already done in E2)
+### F4. Self-host the Orbitron font (if not already done in E2) — folded into issue #13
 **Size:** S · **Deps:** none (dedupe with E2 — do it once)
 **Steps:** download Orbitron 500/700/900 woff2, place in `public/fonts/`, add
 `@font-face` rules with `font-display:swap`, remove the Google Fonts `<link>` tags.
