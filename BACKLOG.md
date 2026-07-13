@@ -7,6 +7,8 @@
 > tracker for the full live list, not this file. This document now serves as
 > historical design rationale and the detailed spec each issue links back to; task
 > IDs below are annotated with their issue number where one exists.
+>
+> **Triage 2026-07-13:** issues #5, #6, #20 closed as not-planned (speculative or absorbed); #3/#4 scope-halved, #10/#11/#13 trimmed, #21 absorbed #5's save normalizer. The GitHub tracker reflects these; the task specs below are pre-triage and may over-scope.
 
 ## Context
 
