@@ -11,7 +11,7 @@ export let W=0,H=0,CS=40,OX=0,OY=0,DPR=1;
 export function resize(){DPR=Math.min(window.devicePixelRatio||1,3);
   W=window.innerWidth;H=window.innerHeight;
   cv.width=W*DPR;cv.height=H*DPR;cv.style.width=W+'px';cv.style.height=H+'px';
-  const topPad=86,botPad=118;
+  const topPad=86,botPad=176;
   CS=Math.min(W/GW,(H-topPad-botPad)/GH);
   OX=(W-CS*GW)/2;OY=topPad+((H-topPad-botPad)-CS*GH)/2;
   starsInit();buildBg();buildPath();meshInit();}

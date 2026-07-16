@@ -24,40 +24,52 @@ $('pauseBtn').addEventListener('click',()=>{if(S.state!=='play')return;S.paused=
 $('resumeBtn').addEventListener('click',()=>{S.paused=false;hide('pauseOv');sfx('click');});
 $('abandonBtn').addEventListener('click',()=>{S.paused=false;hide('pauseOv');gameOver();});
 
-/* ---------- build / tower sheets ---------- */
+/* ---------- tower dock / tower sheet ---------- */
 function show(id){$(id).classList.add('show');}
 function hide(id){$(id).classList.remove('show');}
-function closeSheets(){hide('buildSheet');hide('towerSheet');if(S.G){S.G.sel=null;S.G.selTower=null;S.G.preview=null;}}
-$('buildClose').addEventListener('click',closeSheets);
+function disarm(){if(S.G){S.G.armed=null;S.G.drag=null;}
+  for(const ch of $('dockChips').children)ch.classList.remove('armed');
+  $('dockInfo').textContent='';}
+function closeSheets(){hide('towerSheet');if(S.G)S.G.selTower=null;disarm();}
 $('towerClose').addEventListener('click',closeSheets);
 
-function openBuild(c,r){
-  S.G.sel=[c,r];S.G.selTower=null;S.G.preview=null;hide('towerSheet');
-  const wrap=$('buildCards');wrap.innerHTML='';
-  let armed=null; // two-tap confirm: first tap previews range, second builds
+const buildable=(c,r)=>c>=0&&c<GW&&r>=0&&r<GH&&!pathCells.has(c+','+r)&&!S.G.towers.has(c+','+r);
+function renderDock(){
+  const wrap=$('dockChips');wrap.innerHTML='';$('dockInfo').textContent='';
   for(const[key,def]of Object.entries(TOWERS)){
     const locked=def.lock&&!meta.unlocked[key];
-    const broke=S.G.credits<def.cost;
     const el=document.createElement('div');
-    el.className='card'+(locked?' locked':broke?' broke':'');
+    el.className='chip'+(locked?' locked':S.G.credits<def.cost?' broke':'');
     if(!locked)el.dataset.cost=def.cost; // updateHUD re-checks affordability live
     el.style.borderColor=def.color;el.style.color=def.color;
     el.style.boxShadow=`0 0 10px ${def.color}33,inset 0 0 8px ${def.color}11`;
-    el.innerHTML=`<div class="ic">${def.icon}</div><div class="nm">${def.name}</div>
-      <div class="ds">${locked?'⬡ unlock in lab':def.desc}</div>
-      <div class="cost">${locked?'🔒':'◈ '+def.cost}</div>`;
-    el.addEventListener('click',()=>{
+    el.innerHTML=`<div class="ic">${def.icon}</div><div class="cost">${locked?'🔒':'◈ '+def.cost}</div>`;
+    // press+drag = ghost placement; press+release (tap) = sticky-arm for tap-to-place
+    let drag=null;
+    el.addEventListener('pointerdown',ev=>{
+      audioInit();
       if(locked){sfx('deny');toast('Unlock '+def.name+' in the UPGRADE LAB');return;}
-      if(armed!==key){ // first tap: arm this card + show its range on the tile
-        armed=key;S.G.preview={c,r,type:key};
-        for(const s of wrap.children){s.classList.remove('armed');
-          if(s.dataset.cost)s.querySelector('.cost').textContent='◈ '+s.dataset.cost;}
-        el.classList.add('armed');el.querySelector('.cost').textContent='TAP TO CONFIRM';
-        sfx('click');return;}
-      if(S.G.credits<def.cost){sfx('deny');toast('Not enough credits');return;}
-      buildTower(key,c,r);});
+      if(S.state!=='play'||S.paused||!S.G)return;
+      drag={x0:ev.clientX,y0:ev.clientY,on:false};
+      el.setPointerCapture(ev.pointerId);ev.preventDefault();});
+    el.addEventListener('pointermove',ev=>{
+      if(!drag||!S.G)return;
+      if(!drag.on&&Math.hypot(ev.clientX-drag.x0,ev.clientY-drag.y0)>10)drag.on=true;
+      if(drag.on)S.G.drag={type:key,gx:(ev.clientX-OX)/CS,gy:(ev.clientY-OY)/CS};});
+    el.addEventListener('pointerup',()=>{
+      if(!drag||!S.G){drag=null;return;}
+      if(drag.on){const d=S.G.drag;S.G.drag=null;
+        if(d){const c=Math.floor(d.gx),r=Math.floor(d.gy);
+          if(buildable(c,r)){ // invalid drop cancels silently
+            if(S.G.credits<def.cost){sfx('deny');toast('Not enough credits');}
+            else buildTower(key,c,r);}}}
+      else{const on=S.G.armed!==key;disarm(); // tap: toggle sticky-arm
+        if(on){S.G.armed=key;el.classList.add('armed');
+          $('dockInfo').textContent=def.name+' — '+def.desc;}
+        sfx('click');}
+      drag=null;});
+    el.addEventListener('pointercancel',()=>{drag=null;if(S.G)S.G.drag=null;});
     wrap.appendChild(el);}
-  show('buildSheet');
 }
 function buildTower(type,c,r){
   const def=TOWERS[type];
@@ -68,10 +80,10 @@ function buildTower(type,c,r){
   S.G.fx.push({k:'ring',x:c+.5,y:r+.5,r0:.1,r1:def.tiers[0].range,ttl:.4,max:.4,color:def.color});
   burst(c+.5,r+.5,def.color,10);
   meshImpulse(c+.5,r+.5,110);
-  closeSheets();openTowerPanel(tw);S.dirtyHud=true;
+  S.dirtyHud=true; // no panel popup — keeps rapid placement flowing
 }
 function openTowerPanel(tw){
-  S.G.selTower=tw;S.G.sel=null;hide('buildSheet');
+  S.G.selTower=tw;
   const def=TOWERS[tw.type],st=def.tiers[tw.tier];
   $('towerName').textContent=def.icon+' '+def.name;
   $('towerName').style.color=def.color;
@@ -125,11 +137,15 @@ cv.addEventListener('pointerdown',ev=>{
   audioInit();
   if(S.state!=='play'||S.paused)return;
   const c=Math.floor((ev.clientX-OX)/CS),r=Math.floor((ev.clientY-OY)/CS);
-  if(c<0||c>=GW||r<0||r>=GH){closeSheets();return;}
   const key=c+','+r;
-  if(S.G.towers.has(key)){sfx('click');openTowerPanel(S.G.towers.get(key));}
-  else if(!pathCells.has(key)){sfx('click');openBuild(c,r);}
-  else closeSheets();
+  if(c>=0&&c<GW&&r>=0&&r<GH&&S.G.towers.has(key)){disarm();sfx('click');openTowerPanel(S.G.towers.get(key));return;}
+  if(S.G.armed){const def=TOWERS[S.G.armed];
+    if(buildable(c,r)){
+      if(S.G.credits<def.cost){sfx('deny');toast('Not enough credits');}
+      else buildTower(S.G.armed,c,r);} // stays armed — tap-tap-tap placement
+    else disarm(); // tapped the lane / off-grid: cancel
+    return;}
+  closeSheets(); // nothing armed: empty tap just closes the tower panel
 });
 
 /* ============ FLOW ============ */
@@ -137,6 +153,7 @@ export function startRun(){
   newGame();S.state='play';S.paused=false;S.speed=1;$('speedBtn').textContent='1×';
   hide('menu');hide('overOv');closeSheets();
   $('hud').style.display='flex';$('bar').style.display='flex';
+  $('dock').style.display='block';renderDock();
   $('wavePreview').innerHTML='';
   updateHUD();updateWaveBtn();
   banner('DEFEND THE REACTOR','#22d8ff');
@@ -157,13 +174,13 @@ export function gameOver(){
   $('ovScore').textContent=S.G.score.toLocaleString();
   $('ovKills').textContent=S.G.kills;
   $('ovCores').textContent=earned;
-  $('hud').style.display='none';$('bar').style.display='none';
+  $('hud').style.display='none';$('bar').style.display='none';$('dock').style.display='none';
   show('overOv');
 }
 export function toMenu(){
   S.state='menu';S.G=null;
   hide('overOv');hide('pauseOv');closeSheets();
-  $('hud').style.display='none';$('bar').style.display='none';
+  $('hud').style.display='none';$('bar').style.display='none';$('dock').style.display='none';
   $('mBestWave').textContent=meta.bestWave||'—';
   $('mBestScore').textContent=meta.bestScore?meta.bestScore.toLocaleString():'—';
   $('mCores').textContent=meta.cores;

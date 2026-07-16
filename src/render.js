@@ -1,7 +1,7 @@
 import { clamp, rand, TAU } from './util.js';
 import { S } from './state.js';
 import { meta } from './save.js';
-import { GW, GH, WP, BASE, totalLen, posAt, dirAt } from './path.js';
+import { GW, GH, WP, BASE, pathCells, totalLen, posAt, dirAt } from './path.js';
 import { TOWERS } from './config.js';
 import { ctx, W, H, CS, DPR, cx, cy, stars, bgCanvas, vigCanvas, pathCanvas, glow, blitGlow, mesh } from './layout.js';
 
@@ -92,20 +92,35 @@ export function render(){
     const R=CS*.36*pul*(1+i*.18);
     ctx.moveTo(bx,by-R);ctx.lineTo(bx+R,by);ctx.lineTo(bx,by+R);ctx.lineTo(bx-R,by);ctx.closePath();ctx.stroke();}
   ctx.globalAlpha=1;
-  // selected cell + range
-  if(S.G.sel){const[c,r]=S.G.sel;
-    ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.globalAlpha=.9;
-    ctx.strokeRect(cx(c)+2,cy(r)+2,CS-4,CS-4);ctx.globalAlpha=1;}
+  // selected tower range
   if(S.G.selTower){const tw=S.G.selTower,st=TOWERS[tw.type].tiers[tw.tier];
     ctx.strokeStyle=TOWERS[tw.type].color;ctx.globalAlpha=.5;ctx.lineWidth=1.5;
     ctx.setLineDash([6,6]);
     ctx.beginPath();ctx.arc(cx(tw.c+.5),cy(tw.r+.5),st.range*CS,0,TAU);ctx.stroke();
     ctx.setLineDash([]);ctx.globalAlpha=1;}
-  if(S.G.preview){const p=S.G.preview,def=TOWERS[p.type];
-    ctx.strokeStyle=def.color;ctx.globalAlpha=.4;ctx.lineWidth=1.5;
-    ctx.setLineDash([6,6]);
-    ctx.beginPath();ctx.arc(cx(p.c+.5),cy(p.r+.5),def.tiers[0].range*CS,0,TAU);ctx.stroke();
-    ctx.setLineDash([]);ctx.globalAlpha=1;}
+  // build mode (dock drag or sticky-armed): brighten buildable cells + show existing coverage
+  if(S.G.drag||S.G.armed){
+    ctx.fillStyle='#22d8ff';ctx.globalAlpha=.3;
+    for(let c=0;c<GW;c++)for(let r=0;r<GH;r++){
+      if(pathCells.has(c+','+r)||S.G.towers.has(c+','+r))continue;
+      ctx.fillRect(cx(c+.5)-1.5,cy(r+.5)-1.5,3,3);}
+    ctx.globalAlpha=.12;ctx.lineWidth=1;
+    for(const tw of S.G.towers.values()){
+      ctx.strokeStyle=TOWERS[tw.type].color;
+      ctx.beginPath();ctx.arc(cx(tw.c+.5),cy(tw.r+.5),TOWERS[tw.type].tiers[tw.tier].range*CS,0,TAU);ctx.stroke();}
+    ctx.globalAlpha=1;}
+  // drag ghost: snapped tile tint + range ring + the tower in hand
+  if(S.G.drag){const d=S.G.drag,def=TOWERS[d.type];
+    const c=Math.floor(d.gx),r=Math.floor(d.gy);
+    if(c>=0&&c<GW&&r>=0&&r<GH){
+      const ok=!pathCells.has(c+','+r)&&!S.G.towers.has(c+','+r)&&S.G.credits>=def.cost;
+      ctx.fillStyle=ok?'#22d8ff':'#ff2255';ctx.globalAlpha=.18;
+      ctx.fillRect(cx(c),cy(r),CS,CS);ctx.globalAlpha=1;
+      ctx.strokeStyle=ok?def.color:'#ff2255';ctx.globalAlpha=.5;ctx.lineWidth=1.5;
+      ctx.setLineDash([6,6]);
+      ctx.beginPath();ctx.arc(cx(c+.5),cy(r+.5),def.tiers[0].range*CS,0,TAU);ctx.stroke();
+      ctx.setLineDash([]);ctx.globalAlpha=1;
+      drawTower({type:d.type,c,r,tier:0,aim:null,prio:'first'},t);}}
   // towers
   for(const tw of S.G.towers.values())drawTower(tw,t);
   // enemies

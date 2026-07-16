@@ -15,7 +15,7 @@ export function newGame(){
   S.G={health:10+meta.up.hp*2,credits:Math.round((200+meta.up.credits*30)*tuning.economy),score:0,mult:1,streak:0,
     wave:0,enemies:[],towers:new Map(),projs:[],fx:[],parts:[],texts:[],
     spawnQ:[],waveT:0,waveActive:false,countdown:5,kills:0,
-    sel:null,selTower:null,time:0,shake:0,flash:0};
+    selTower:null,armed:null,drag:null,time:0,shake:0,flash:0};
 }
 export const dmgMul=()=>(1+meta.up.dmg*.04)*tuning.towerDmg;
 export const salvMul=()=>1+meta.up.salvage*.05;

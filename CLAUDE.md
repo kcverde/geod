@@ -37,7 +37,7 @@ npm test         # run unit tests (Vitest)
 | `waves.js` | `waveSpawns(n)` (pure schedule builder — bosses every 8th wave), `hpMul` difficulty scaling, `startWave` (owns the wave/boss banner + sfx side effects), `spawnEnemy`. |
 | `combat.js` | Targeting (`nearestEnemies`, `pickTarget`), damage (`hurt`, `kill`), `leak` (drains health only — the game-over check lives in `update()`), and per-turret firing in `fireTower()` (one branch per type). |
 | `render.js` | `render()` + `drawTower`/`drawEnemy`. Canvas 2D; uses `globalCompositeOperation='lighter'` heavily for the neon glow. Draw-only — reads `S.G`, never mutates it. |
-| `ui.js` | DOM overlays + event listeners (build/tower sheets, shop, menu buttons, canvas input) and the flow entry points `startRun`/`gameOver`/`toMenu`. Listeners register at import time. |
+| `ui.js` | DOM overlays + event listeners (tower dock, tower sheet, shop, menu buttons, canvas input) and the flow entry points `startRun`/`gameOver`/`toMenu`. Building uses the always-visible dock: drag a chip onto the field (ghost + range preview via `S.G.drag`, render-side) or tap a chip to sticky-arm (`S.G.armed`) then tap tiles to rapid-place. Listeners register at import time. |
 | `tuning.js` | Dev balance multipliers (`tuning` object) + localStorage persistence. Read at the game's balance chokepoints. |
 | `admin.js` | Dev-only tuning overlay (sliders + debug actions). Loaded dynamically; see below. |
 

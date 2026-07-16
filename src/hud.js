@@ -13,10 +13,9 @@ export function updateHUD(){
   $('hudScore').textContent=S.G.score.toLocaleString();
   $('hudMult').textContent='×'+S.G.mult.toFixed(1)+(S.G.streak>0?'  ('+S.G.streak+' streak)':'');
   $('hudWave').textContent='WAVE '+Math.max(1,S.G.wave+(S.G.waveActive?0:1));
-  // live affordability while sheets are open (cards carry data-cost; locked ones don't)
-  if($('buildSheet').classList.contains('show'))
-    for(const el of document.querySelectorAll('#buildCards .card[data-cost]'))
-      el.classList.toggle('broke',S.G.credits<+el.dataset.cost);
+  // live affordability on the dock chips (locked ones carry no data-cost)
+  for(const el of document.querySelectorAll('#dockChips .chip[data-cost]'))
+    el.classList.toggle('broke',S.G.credits<+el.dataset.cost);
   if($('towerSheet').classList.contains('show')&&S.G.selTower&&S.G.selTower.tier<2)
     $('upgBtn').disabled=S.G.credits<TOWERS[S.G.selTower.type].up[S.G.selTower.tier];
 }
