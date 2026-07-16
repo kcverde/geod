@@ -69,7 +69,7 @@ function update(dt){
   S.G.flash=Math.max(0,S.G.flash-dt*1.8);
   // wave end
   if(S.G.waveActive&&!S.G.spawnQ.length&&!S.G.enemies.length){
-    S.G.waveActive=false;
+    S.G.waveActive=false;S.G.wavesDone++; // sole increment site — rewards/records count cleared waves only
     const bonus=Math.round((25+S.G.wave*6)*salvMul()*tuning.economy);
     S.G.credits+=bonus;S.G.score+=200+S.G.wave*50;
     sfx('cash');toast('WAVE CLEAR  +'+bonus+' ◈');

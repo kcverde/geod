@@ -13,7 +13,7 @@ export const S={state:'menu',paused:false,speed:1,G:null,dirtyHud:false,slowmo:0
 export function newGame(){
   S.slowmo=0;
   S.G={health:10+meta.up.hp*2,credits:Math.round((200+meta.up.credits*30)*tuning.economy),score:0,mult:1,streak:0,
-    wave:0,enemies:[],towers:new Map(),projs:[],fx:[],parts:[],texts:[],
+    wave:0,wavesDone:0,enemies:[],towers:new Map(),projs:[],fx:[],parts:[],texts:[],
     spawnQ:[],waveT:0,waveActive:false,countdown:5,kills:0,
     selTower:null,armed:null,drag:null,time:0,shake:0,flash:0};
 }

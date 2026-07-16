@@ -8,6 +8,7 @@ import { TOWERS, SHOP } from './config.js';
 import { burst, addText, banner, toast } from './fx.js';
 import { updateHUD, updateWaveBtn } from './hud.js';
 import { startWave } from './waves.js';
+import { coresEarned } from './rules.js';
 
 /* ============ UI ============ */
 /* DOM overlays + event listeners (registered at import time — the module is
@@ -161,16 +162,16 @@ export function startRun(){
 export function gameOver(){
   if(S.state==='over'||!S.G)return;
   S.state='over';closeSheets();
-  const earned=S.G.wave*2+Math.floor(S.G.score/4000);
-  const newBest=S.G.wave>meta.bestWave||S.G.score>meta.bestScore;
+  const earned=coresEarned(S.G.wavesDone,S.G.score); // cleared waves only — started waves don't pay (#2)
+  const newBest=S.G.wavesDone>meta.bestWave||S.G.score>meta.bestScore;
   meta.cores+=earned;
-  meta.bestWave=Math.max(meta.bestWave,S.G.wave);
+  meta.bestWave=Math.max(meta.bestWave,S.G.wavesDone);
   meta.bestScore=Math.max(meta.bestScore,S.G.score);
   saveMeta();
   sfx('over');buzz([60,60,120]);
   $('ovBest').style.display=newBest?'':'none';
   if(newBest)sfx('upgrade');
-  $('ovWave').textContent='SURVIVED '+S.G.wave+' WAVE'+(S.G.wave===1?'':'S');
+  $('ovWave').textContent='SURVIVED '+S.G.wavesDone+' WAVE'+(S.G.wavesDone===1?'':'S');
   $('ovScore').textContent=S.G.score.toLocaleString();
   $('ovKills').textContent=S.G.kills;
   $('ovCores').textContent=earned;
