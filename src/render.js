@@ -98,16 +98,12 @@ export function render(){
     ctx.setLineDash([6,6]);
     ctx.beginPath();ctx.arc(cx(tw.c+.5),cy(tw.r+.5),st.range*CS,0,TAU);ctx.stroke();
     ctx.setLineDash([]);ctx.globalAlpha=1;}
-  // build mode (dock drag or sticky-armed): brighten buildable cells + show existing coverage
+  // build mode (dock drag or sticky-armed): brighten buildable cells
   if(S.G.drag||S.G.armed){
     ctx.fillStyle='#22d8ff';ctx.globalAlpha=.3;
     for(let c=0;c<GW;c++)for(let r=0;r<GH;r++){
       if(pathCells.has(c+','+r)||S.G.towers.has(c+','+r))continue;
       ctx.fillRect(cx(c+.5)-1.5,cy(r+.5)-1.5,3,3);}
-    ctx.globalAlpha=.12;ctx.lineWidth=1;
-    for(const tw of S.G.towers.values()){
-      ctx.strokeStyle=TOWERS[tw.type].color;
-      ctx.beginPath();ctx.arc(cx(tw.c+.5),cy(tw.r+.5),TOWERS[tw.type].tiers[tw.tier].range*CS,0,TAU);ctx.stroke();}
     ctx.globalAlpha=1;}
   // drag ghost: snapped tile tint + range ring + the tower in hand
   if(S.G.drag){const d=S.G.drag,def=TOWERS[d.type];
